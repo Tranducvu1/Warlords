@@ -1,6 +1,7 @@
-import * as pc from 'playcanvas';
+import * as pc from 'playcanvas'; 
+import { addZombieMovement } from './zombieMovement'; 
+import { stateMachine } from './StateMachine';
 
-// Create zombie
 export function createZombie(app, assets) {
     const EnemyEntity = new pc.Entity("Enemy");
     EnemyEntity.tags.add('enemy');
@@ -17,6 +18,20 @@ export function createZombie(app, assets) {
     EnemyEntity.addComponent("animation", {
         assets: [assets.zombieIdle, assets.zombierunning]
     });
+    
+    const zombieStateMachine = new stateMachine("idle");
+
+    zombieStateMachine.addState("idle" ,() => {
+        EnemyEntity.animation?.play(assets.zombieIdle.name, 0.2);
+    });
+    
+    zombieStateMachine.addState("running" ,() => {
+        EnemyEntity.animation?.play(assets.zombierunning.name, 0.2);
+    });
+    
+    zombieStateMachine.addState("death" ,() => {
+        EnemyEntity.animation?.play(assets.zombieDeath.name, 0.2); // Thêm hoạt ảnh chết nếu cần
+    });
 
     EnemyEntity.addComponent("rigidbody", {
         type: 'static'
@@ -27,28 +42,8 @@ export function createZombie(app, assets) {
         halfExtents: new pc.Vec3(0.5, 1, 0.5)
     });
 
-    let direction = 1; // 1 for right, -1 for left
-    const zombieSpeed = 2; // Speed of the zombie movement
     EnemyEntity.health = 100;
 
-    const maxPositionX = 10; // Max x
-    const minPositionX = -10; // Min x
-
-    app.on('update', (dt) => {
-        const position = EnemyEntity.getLocalPosition(); 
-        const targetPositionX = position.x + (direction * zombieSpeed * dt);
-
-        if (targetPositionX > maxPositionX) {
-            direction = -1; 
-            EnemyEntity.setLocalEulerAngles(0, -90, 0);
-            EnemyEntity.animation?.play(assets.zombierunning.name, 0.1); 
-        } else if (targetPositionX < minPositionX) {
-            direction = 1; 
-            EnemyEntity.setLocalEulerAngles(0, 90, 0);
-            EnemyEntity.animation?.play(assets.zombierunning.name, 0.1); 
-        }
-
-        position.x = targetPositionX; 
-        EnemyEntity.setLocalPosition(position);
-    });
+    // Gọi hàm chuyển động
+    addZombieMovement(EnemyEntity, assets, app);
 }
