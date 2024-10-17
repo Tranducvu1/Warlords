@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { createPlayer } from './player/Player';
 import { createZombie } from './zombie/zombie';
+import { createMap } from './Map/map';
 
 declare module 'playcanvas' {
     interface Entity {
@@ -63,14 +64,18 @@ window.onload = () => {
             rifleaim: new pc.Asset('animation_rifle', 'animation', { url: '../animation/rifleaim.glb' }),
             riflewalk: new pc.Asset('animation_rifle', 'animation', { url: '../animation/rifle walk.glb' }),
             muzzle_flash: new pc.Asset('muzzle_flash', 'animation', { url: '../animation/muzzle_flash.glb' }),
-            weapon: new pc.Asset('model_ak', 'model', { url: '../model/ak.glb' })
+            weapon: new pc.Asset('model_ak', 'model', { url: '../model/ak.glb' }),
+            crosshair: new pc.Asset('aim', 'model', { url: '../model/crosshair.png' }),
+            map: new pc.Asset('map', 'model', { url: '../model/map.glb' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
         assetListLoader.load(() => {
-            // Gọi hàm tạo nhân vật hoặc zombie ở đây
-            createZombie(app, assets); // Tạo zombie
-            createPlayer(app, assets, cameraEntity); // Tạo nhân vật
+            createMap(app, assets); 
+            createZombie(app, assets);
+            createPlayer(app, assets, cameraEntity); 
+
+            
         });
     }
 };

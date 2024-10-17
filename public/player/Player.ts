@@ -7,7 +7,8 @@ import { handleMovement } from './Movement';
 
 declare module 'playcanvas' {
     interface Entity {
-        health?: number;
+        health?: number,
+      //  collision?: pc.CollisionComponent;
     }
 }
 // Create player
@@ -30,12 +31,20 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
         type: 'box',
         halfExtents: new pc.Vec3(0.5, 1, 0.5)
     });
+    const collisionComponent = characterEntity.collision;
+    if (collisionComponent) {
+        collisionComponent.on('triggerenter', function (other) {
+            console.log('Nhân vật va chạm với:', other.name);
+        });
+    } else {
+        console.warn('Component collision chưa được thêm vào characterEntity');
+    }
+  //  createAim(characterEntity,assets)
      // Get the skinInstance from the character model
     const characterModel = characterEntity.model;
     if (characterModel && characterModel.meshInstances[0].skinInstance) {
         const skinInstance = characterModel.meshInstances[0].skinInstance;
         const bones = skinInstance.bones;
-
         // Find the right hand bone (RightHand)
         const rightHandBone = bones.find(bone => bone.name === 'mixamorig:RightHand');
         if (rightHandBone) {
@@ -45,16 +54,13 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
         muzzlesEntity.addComponent("animation_muzle", {
             assets: [assets.muzzle_flash]
         });
-        
         app.on('update', () => {
-            // get loca bone 
+            // get location bone 
             const handPosition = rightHandBone.getPosition();
             const handRotation = rightHandBone.getRotation();
             weaponHelper.setLocalScale(0.4,0.4,0.4)
-
             weaponHelper.setPosition(handPosition);
             weaponHelper.setRotation(handRotation);
-        
         });
     } else {
         console.log("Không tìm thấy xương 'mixamorig:RightHand'.");
@@ -85,12 +91,9 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
     playerStateMachine.addState("rifleaim", () => {
         characterEntity.animation?.play(assets.rifleaim.name, 0.2);
     });
-    //follow hover cam
-    let isMoving = false;
-    let movementDirection = new pc.Vec3()
+    
     // Set up character keyboard
     const charMovement = new pc.Vec3();
-    const charSpeed = 5;
     const keyboard = new pc.Keyboard(document.body); 
     // Variables for mouse movement
     let isDragging = false;
@@ -101,7 +104,7 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
     const sensitivity = 0.2;
     let isShooting = false; // Variable to track shooting state
     let isPointerLocked  = false
-
+    let isAiming = false;
 
     // Pointer lock change event
     document.addEventListener('pointerlockchange', () => {
@@ -194,33 +197,27 @@ if (app.mouse) {
     // Mouse move event to rotate the camera when dragging
     app.mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
         if (isPointerLocked) {
-             const dx = event.x - lastMouseX;
-             const dy = event.y - lastMouseY;
-           // const dx = event.dx; 
-           // const dy = event.dy; 
-            // Update yaw (horizontal rotation) and pitch (vertical rotation)
+            console.log(`Mouse dx: ${event.dx}, dy: ${event.dy}`);
+            const dx = event.dx ;
+            const dy = event.dy ;
+    
+            // Cập nhật yaw (xoay ngang) và pitch (xoay dọc) của camera
             cameraYaw -= dx * sensitivity;
             cameraPitch -= dy * sensitivity;
-            // Clamp the pitch to prevent flipping over
+    
+            // Giới hạn pitch để tránh lật ngược
             cameraPitch = pc.math.clamp(cameraPitch, -45, 45);
-            updateCameraPosition(cameraYaw, cameraPitch);
-            // lastMouseX = event.x;
-            // lastMouseY = event.y;
+    
+            // Chỉ cập nhật camera mà không tác động đến nhân vật
+            updateCameraRotation(cameraYaw, cameraPitch);
         }
     });
+}    
+
+function updateCameraRotation(yaw: number, pitch: number) {
+    cameraEntity.setEulerAngles(pitch, yaw, 0);
 }
 
-// update camera after haver cam
-function updateCameraPosition(yaw, pitch) {
-     const cameraEntity = app.root.findByName('cameraEntity'); 
-    const characterEntity = app.root.findByName('character');
-
-    
-    cameraEntity.setPosition(characterEntity.getPosition());
-    cameraEntity.setRotation(characterEntity.getRotation());
-    
-   // cameraEntity.lookAt(charPosition);
-}
 
 // Mouse down event to start dragging
     app.mouse?.on(pc.EVENT_MOUSEDOWN, (event) => {
@@ -257,42 +254,43 @@ keyboard.on(pc.EVENT_KEYUP, (event) => {
 });
 
 app.on("update", (dt) => {
-    //characterEntity.animation?.play(assets.muzzle_flash.name, 0.1);
-    handleMovement(characterEntity, keyboard, cameraYaw, dt) 
-  
+    // call movement
+    handleMovement(characterEntity, keyboard, cameraYaw, dt);
+
+
+    const charPosition = characterEntity.getPosition();
+    const charRotation = characterEntity.getRotation();
+
+    // set up location camera
+    let cameraOffset = new pc.Vec3(0, 2, -3); 
+
+    // rotation in camera set up
+    const cameraQuat = new pc.Quat().setFromEulerAngles(0, cameraYaw, 0);
+    cameraQuat.transformVector(cameraOffset, cameraOffset);
+
+    // update camera
+    const cameraPosition = new pc.Vec3().add2(charPosition, cameraOffset);
+    cameraEntity.setPosition(cameraPosition);
+
+    // Camera look at point
+    const lookAtPoint = new pc.Vec3().add2(charPosition, new pc.Vec3(0, 1.7, 0));  // Nhìn vào đầu nhân vật
+    cameraEntity.lookAt(lookAtPoint);
+
     
-    // Rotate movement direction based on camera yaw
-    const movementQuat = new pc.Quat().setFromEulerAngles(0, cameraYaw, 0);
-    movementQuat.transformVector(charMovement, charMovement);
-    characterEntity.translate(charMovement);
-    // Rotate the character to face the direction of movement, if it is moving
     if (charMovement.length() > 0) {
         const angle = Math.atan2(charMovement.x, charMovement.z);
         characterEntity.setEulerAngles(0, angle * pc.math.RAD_TO_DEG, 0);
     }
-  
-    // Update the animation for movement
+
+    // update animation
     const moved = keyboard.isPressed(pc.KEY_W) || keyboard.isPressed(pc.KEY_S) || keyboard.isPressed(pc.KEY_A) || keyboard.isPressed(pc.KEY_D);
     if (moved && playerStateMachine.getCurrentState() === "idle") {
-        playerStateMachine.changeState("running")
-       // currentAnim = assets.running.name;
+        playerStateMachine.changeState("running");
     } else if (!moved && playerStateMachine.getCurrentState() === "running") {
-        playerStateMachine.changeState("idle")
-       // characterEntity.animation?.play(assets.idle.name, 0.1);
-       // currentAnim = assets.idle.name;
-    }             
-   // updateCameraPosition(cameraYaw, cameraPitch);
-    
-//  Update camera position to follow the character
-    const charPosition = characterEntity.getPosition();
-    const cameraOffset = new pc.Vec3(-0.1, 2, -1.5); 
-    const cameraPosition = new pc.Vec3().add2(charPosition, cameraOffset);
-    cameraEntity.setPosition(cameraPosition);
-    const forwardVector = new pc.Vec3(0, 0, -1);
-    const cameraDirection = new pc.Vec3().add2(cameraPosition, forwardVector);
-    cameraEntity.setEulerAngles(0, Math.atan2(cameraDirection.x - cameraPosition.x, cameraDirection.z - cameraPosition.z) * (180 / Math.PI), 0);
-    //cameraEntity.lookAt(charPosition);
+        playerStateMachine.changeState("idle");
+    }
 
+    
 });
-};
+}
 
