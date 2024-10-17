@@ -11,9 +11,11 @@ declare module 'playcanvas' {
       //  collision?: pc.CollisionComponent;
     }
 }
+
 // Create player
 export function createPlayer(app, assets, cameraEntity: pc.Entity) {
     const characterEntity = new pc.Entity("character");
+    characterEntity.tags.add('player');
     app.root.addChild(characterEntity);
     
     characterEntity.addComponent("model", {
@@ -21,24 +23,21 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
         asset: assets.man
     });
     const scale = 0.01;
-    characterEntity.setLocalPosition(scale, scale, scale);
+    characterEntity.setLocalPosition(scale+3, scale, scale);
     
     characterEntity.addComponent("rigidbody", {
-        type: 'dynamic'
+        type: 'dynamic', 
+        mass: 80,
+        linearDamping: 0.9,
+        angularDamping: 0.9
+    });
+    
+    characterEntity.addComponent("collision", {
+        type: 'capsule', 
+        radius: 0.5,
+        height: 1.8
     });
 
-    characterEntity.addComponent("collision", {
-        type: 'box',
-        halfExtents: new pc.Vec3(0.5, 1, 0.5)
-    });
-    const collisionComponent = characterEntity.collision;
-    if (collisionComponent) {
-        collisionComponent.on('triggerenter', function (other) {
-            console.log('Nhân vật va chạm với:', other.name);
-        });
-    } else {
-        console.warn('Component collision chưa được thêm vào characterEntity');
-    }
   //  createAim(characterEntity,assets)
      // Get the skinInstance from the character model
     const characterModel = characterEntity.model;
@@ -66,6 +65,7 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
         console.log("Không tìm thấy xương 'mixamorig:RightHand'.");
     }
 }
+
  // Add animation component
  characterEntity.addComponent("animation", {
     assets: [assets.idle, assets.running, assets.shooting, assets.rifleaim]
@@ -127,7 +127,7 @@ if (app.mouse) {
         //When clicking the mouse, play the shooting animation if in idle or rifleaim
         if ((playerStateMachine.getCurrentState() === "idle" || playerStateMachine.getCurrentState() === "rifleaim" || playerStateMachine.getCurrentState() === "shooting" ) && !isShooting) {
             playerStateMachine.changeState("shooting");
-            console.log(playerStateMachine.getCurrentState() )
+       
           //  currentAnim = assets.shooting.name;
             isShooting = true;     
             const from = cameraEntity.getPosition();
@@ -190,14 +190,25 @@ if (app.mouse) {
                 playerStateMachine.changeState(newState);   
             }
             isShooting = false;
-            console.log("Mouse up: Stopped shooting");
+           
+        }
+    });
+
+    app.on('update', function() {
+        if (characterEntity.rigidbody) {
+            characterEntity.rigidbody.on('collisionstart', function(result) {
+                console.log('Character collided with:', result.other.entity.name);
+                // Xử lý va chạm ở đây
+            });
+        } else {
+            console.warn('Rigidbody component not found on character entity');
         }
     });
 
     // Mouse move event to rotate the camera when dragging
     app.mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
         if (isPointerLocked) {
-            console.log(`Mouse dx: ${event.dx}, dy: ${event.dy}`);
+           
             const dx = event.dx ;
             const dy = event.dy ;
     
@@ -254,6 +265,8 @@ keyboard.on(pc.EVENT_KEYUP, (event) => {
 });
 
 app.on("update", (dt) => {
+    
+
     // call movement
     handleMovement(characterEntity, keyboard, cameraYaw, dt);
 

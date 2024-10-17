@@ -2,6 +2,9 @@ import * as pc from 'playcanvas';
 import { createPlayer } from './player/Player';
 import { createZombie } from './zombie/zombie';
 import { createMap } from './Map/map';
+import Ammo from './Utils/ammo';
+
+
 
 declare module 'playcanvas' {
     interface Entity {
@@ -9,15 +12,27 @@ declare module 'playcanvas' {
     }
 }
 
-window.onload = () => {
-    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 
+async function initializeAmmo() {
+    try {
+        const AmmoModule = await import('./Utils/ammo.js'); 
+        return AmmoModule.default; 
+    } catch (error) {
+        console.error("Failed to load Ammo.js:", error);
+        throw error; 
+    }
+}
+
+window.onload = async () => {
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    const ammo = await initializeAmmo();
     if (canvas) {
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(canvas),
             touch: new pc.TouchDevice(canvas),
             keyboard: new pc.Keyboard(window)
         });
+
 
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -52,6 +67,8 @@ window.onload = () => {
         ground.setPosition(0, -0.25, 0);
         app.root.addChild(ground);
 
+
+        
         // Load character model and animations
         const assets = {
             man: new pc.Asset('model_man', 'model', { url: '../model/idle.glb' }),
@@ -71,9 +88,10 @@ window.onload = () => {
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
         assetListLoader.load(() => {
+            createPlayer(app, assets, cameraEntity); 
             createMap(app, assets); 
             createZombie(app, assets);
-            createPlayer(app, assets, cameraEntity); 
+  
 
             
         });
