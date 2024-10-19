@@ -27,9 +27,12 @@ export function createZombie(app, assets) {
         mass: 50
     });
 
+    
+
     EnemyEntity.addComponent("collision", {
-        type: 'capsule',
-        halfExtents: new pc.Vec3(0.5, 1, 0.5)
+        type: 'capsule', 
+        radius: 0.5,
+        height: 1.8
     });
 
     addZombieMovement(EnemyEntity, assets, app);

@@ -42,6 +42,17 @@ export function handleMovement(characterEntity, keyboard, cameraYaw, dt) {
             playerStateMachine.changeState("idle");
         }
     }
+
+      // Đăng ký sự kiện va chạm
+      characterEntity.rigidbody.on('collisionstart', (event) => {
+        console.log("Collision start");
+
+        // Duyệt qua tất cả các đối tượng va chạm
+        event.contacts.forEach(contact => {
+            const otherEntity = contact.other; // Đối tượng va chạm
+            console.log("Va chạm với:", otherEntity.name);
+        });
+    });
     
   
     return charMovement;

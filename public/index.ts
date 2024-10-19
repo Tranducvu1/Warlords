@@ -7,12 +7,13 @@ import { createGround } from './Scene/Ground';
 import { loadAssets } from './Utils/loadAssets';
 import { createMap } from './Scene/Map';
 
-// Cấu hình cho Ammo.js
+
 pc.WasmModule.setConfig("Ammo", {
-    fallbackUrl: "../Utils/ammo.js",
-    glueUrl: "../Utils/ammo.wasm.js",
-    wasmUrl: "../Utils/ammo.wasm.wasm",
+    fallbackUrl: "./Utils/ammo.js",
+    glueUrl: "./Utils/ammo.wasm.js",
+    wasmUrl: "./Utils/ammo.wasm.wasm",
 });
+
 
 
 window.onload = async () => {
@@ -51,7 +52,5 @@ window.onload = async () => {
         
       
         app.scene.ambientLight = new pc.Color(0.5, 0.5, 0.5);
-    } else {
-        console.error("Canvas not found!");
     }
 };

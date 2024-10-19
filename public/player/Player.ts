@@ -148,9 +148,22 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
     
 
     app.on("update", (dt) => {
-       characterEntity.rigidbody?.on('collisionstart', (event) => {
-            console.log("Collision start");
+       // Đăng ký sự kiện va chạm
+    characterEntity.rigidbody?.on('collisionstart', (event) => {
+        console.log("Collision start");
+
+        // Duyệt qua tất cả các đối tượng va chạm
+        event.contacts.forEach(contact => {
+            const otherEntity = contact.other; // Đối tượng va chạm
+            if (otherEntity && otherEntity.name) { // Kiểm tra nếu đối tượng không phải là undefined và có thuộc tính name
+                console.log("Va chạm với:", otherEntity.name);
+            } else {
+                console.warn("Đối tượng không hợp lệ:", otherEntity);
+            }
         });
+    });
+
+        
         // Call movement
         handleMovement(characterEntity, keyboard, cameraYaw, dt);
         const charPosition = characterEntity.getPosition();

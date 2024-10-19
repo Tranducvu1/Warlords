@@ -22,8 +22,8 @@ export function initializeCharacterEntity(app, assets) {
 
     characterEntity.addComponent("collision", {
         type: 'capsule', 
-        radius: 50,
-        height: 1.8
+        radius: 0.5,
+        height: 1
     });
    
     console.log('Player Components:', {
