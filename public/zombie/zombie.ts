@@ -1,6 +1,7 @@
-import * as pc from 'playcanvas'; 
+import * as pc from 'playcanvas';  
 import { addZombieMovement } from './zombieMovement'; 
-import { stateMachine } from './StateMachine';
+import { stateMachine } from '../Utils/StateMachine';
+import { createZombieStateMachine } from './zombiestateMachine';
 
 export function createZombie(app, assets) {
     const EnemyEntity = new pc.Entity("Enemy");
@@ -9,41 +10,31 @@ export function createZombie(app, assets) {
     
     EnemyEntity.addComponent("model", {
         type: "asset",
-        asset: assets.zombie
+        asset: assets.zombie // Đảm bảo asset đã được tải
     });
 
-    const zombiesposition = 1;
-    EnemyEntity.setLocalPosition(zombiesposition + 3, zombiesposition - 1, zombiesposition - 1);
+    const zombiesposition = 0;
+    EnemyEntity.setLocalPosition(zombiesposition, zombiesposition, zombiesposition);
 
     EnemyEntity.addComponent("animation", {
-        assets: [assets.zombieIdle, assets.zombierunning]
+        assets: [assets.zombieIdle, assets.zombierunning] // Kiểm tra xem các asset animation đã được tải
     });
     
-    const zombieStateMachine = new stateMachine("idle");
-
-    zombieStateMachine.addState("idle" ,() => {
-        EnemyEntity.animation?.play(assets.zombieIdle.name, 0.2);
-    });
+    const zombieStateMachine = createZombieStateMachine(EnemyEntity, assets);
     
-    zombieStateMachine.addState("running" ,() => {
-        EnemyEntity.animation?.play(assets.zombierunning.name, 0.2);
-    });
-    
-    zombieStateMachine.addState("death" ,() => {
-        EnemyEntity.animation?.play(assets.zombieDeath.name, 0.2); // Thêm hoạt ảnh chết nếu cần
-    });
-
     EnemyEntity.addComponent("rigidbody", {
-        type: 'static'
+        type: 'dynamic',
+        mass: 50
     });
 
     EnemyEntity.addComponent("collision", {
-        type: 'box',
+        type: 'capsule',
         halfExtents: new pc.Vec3(0.5, 1, 0.5)
     });
 
-    EnemyEntity.health = 100;
-
-    // Gọi hàm chuyển động
     addZombieMovement(EnemyEntity, assets, app);
+    
+    console.log('Zombie created:', EnemyEntity);
+
+    return EnemyEntity; 
 }

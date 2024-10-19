@@ -1,109 +1,37 @@
 import * as pc from 'playcanvas';
-import { stateMachine } from './StateMachine';
-import { createWeapon } from './Weapon';
+import { handleWeapon } from '../Weapon/Weapon';
 import { handleMovement } from './Movement';
-
-
-
-declare module 'playcanvas' {
-    interface Entity {
-        health?: number,
-      //  collision?: pc.CollisionComponent;
-    }
-}
+import { createplayerstateMachine } from './playerstateMachine';
+import { initializeCharacterEntity } from './EntityInitializer';
+import { setupRaycasting } from './raycasting';
+import { initializeCrosshairEntity } from './crosshair';
 
 // Create player
 export function createPlayer(app, assets, cameraEntity: pc.Entity) {
-    const characterEntity = new pc.Entity("character");
-    characterEntity.tags.add('player');
-    app.root.addChild(characterEntity);
-    
-    characterEntity.addComponent("model", {
-        type: "asset",
-        asset: assets.man
-    });
-    const scale = 0.01;
-    characterEntity.setLocalPosition(scale+3, scale, scale);
-    
-    characterEntity.addComponent("rigidbody", {
-        type: 'dynamic', 
-        mass: 80,
-        linearDamping: 0.9,
-        angularDamping: 0.9
-    });
-    
-    characterEntity.addComponent("collision", {
-        type: 'capsule', 
-        radius: 0.5,
-        height: 1.8
-    });
+    const characterEntity = initializeCharacterEntity(app, assets);
+    const crosshairEntity = initializeCrosshairEntity(app, assets);
+    // Get the skinInstance from the character model
+    handleWeapon(characterEntity, assets, app);
 
-  //  createAim(characterEntity,assets)
-     // Get the skinInstance from the character model
-    const characterModel = characterEntity.model;
-    if (characterModel && characterModel.meshInstances[0].skinInstance) {
-        const skinInstance = characterModel.meshInstances[0].skinInstance;
-        const bones = skinInstance.bones;
-        // Find the right hand bone (RightHand)
-        const rightHandBone = bones.find(bone => bone.name === 'mixamorig:RightHand');
-        if (rightHandBone) {
-        const weaponHelper = createWeapon(characterEntity, assets, rightHandBone);
-        // Create muzzle flash entity
-        const muzzlesEntity = new pc.Entity("muzzleFlash");
-        muzzlesEntity.addComponent("animation_muzle", {
-            assets: [assets.muzzle_flash]
-        });
-        app.on('update', () => {
-            // get location bone 
-            const handPosition = rightHandBone.getPosition();
-            const handRotation = rightHandBone.getRotation();
-            weaponHelper.setLocalScale(0.4,0.4,0.4)
-            weaponHelper.setPosition(handPosition);
-            weaponHelper.setRotation(handRotation);
-        });
-    } else {
-        console.log("Không tìm thấy xương 'mixamorig:RightHand'.");
-    }
-}
-
- // Add animation component
- characterEntity.addComponent("animation", {
-    assets: [assets.idle, assets.running, assets.shooting, assets.rifleaim]
-});
+    // Add animation component
+    characterEntity.addComponent("animation", {
+        assets: [assets.idle, assets.running, assets.shooting, assets.rifleaim]
+    });
     let currentAnim = assets.idle.name;
-            // create machine for charracter
-    const playerStateMachine = new stateMachine("idle");
-
-    // Add state to state machine
-    playerStateMachine.addState("idle", () => {
-        characterEntity.animation?.play(assets.idle.name, 0.2);
-
-    });
-
-    playerStateMachine.addState("running", () => {
-        characterEntity.animation?.play(assets.running.name, 0.2);
-    });
-
-    playerStateMachine.addState("shooting", () => {
-        characterEntity.animation?.play(assets.shooting.name, 0.2);
-    });
-
-    playerStateMachine.addState("rifleaim", () => {
-        characterEntity.animation?.play(assets.rifleaim.name, 0.2);
-    });
-    
+    // Create state machine for character
+    const playerStateMachine = createplayerstateMachine(characterEntity, assets);
     // Set up character keyboard
     const charMovement = new pc.Vec3();
-    const keyboard = new pc.Keyboard(document.body); 
+    const keyboard = new pc.Keyboard(document.body);
     // Variables for mouse movement
     let isDragging = false;
     let cameraYaw = 0;
-    let cameraPitch = 15;  // Pitch camera slightly down
+    let cameraPitch = 15; // Pitch camera slightly down
     let lastMouseX = 0;
     let lastMouseY = 0;
     const sensitivity = 0.2;
-    let isShooting = false; // Variable to track shooting state
-    let isPointerLocked  = false
+    let isShooting = false; // Track shooting state
+    let isPointerLocked = false;
     let isAiming = false;
 
     // Pointer lock change event
@@ -117,193 +45,160 @@ export function createPlayer(app, assets, cameraEntity: pc.Entity) {
             app.graphicsDevice.canvas.requestPointerLock();
         }
     });
+
     // Mouse down event to start shooting
-if (app.mouse) {
-    app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
+    if (app.mouse) {
+        app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
+            if (!isPointerLocked) {
+                app.graphicsDevice.canvas.requestPointerLock();
+            }
 
-        if (!isPointerLocked) {
-            app.graphicsDevice.canvas.requestPointerLock();
-        }
-        //When clicking the mouse, play the shooting animation if in idle or rifleaim
-        if ((playerStateMachine.getCurrentState() === "idle" || playerStateMachine.getCurrentState() === "rifleaim" || playerStateMachine.getCurrentState() === "shooting" ) && !isShooting) {
-            playerStateMachine.changeState("shooting");
+            if (["idle", "rifleaim", "shooting"].includes(playerStateMachine.getCurrentState()) && !isShooting) {
+                playerStateMachine.changeState("shooting");
+                isShooting = true;
+
+                const crosshairPosition = crosshairEntity.getPosition();
+                const crosshairForward = crosshairEntity.forward.clone();
+                const distance = 100; // Raycast length
+                const rayEnd = new pc.Vec3().add2(crosshairPosition, crosshairForward.mulScalar(distance));
+
+                if (characterEntity.rigidbody) {
+                    console.log("Rigidbody system is available.");
+                    return;
+                }
+                if (characterEntity.collision) {
+                    console.log("Collision system is available.");
+                    return;
+                }
+
+                // Activate raycast
+                const result = app.systems.rigidbody.raycastFirst(crosshairPosition, rayEnd);
+                console.log(result.entity.tags.list);
+
+                // Check raycast for enemy tag
+                setupRaycasting(app, playerStateMachine, cameraEntity, crosshairEntity, assets);
+            }
+        });
+
+
+      
+
+        // Mouse up event to stop shooting
+        app.mouse.on(pc.EVENT_MOUSEUP, () => {
+            if (isShooting && playerStateMachine.getCurrentState() === "shooting") {
+                const newState = currentAnim === playerStateMachine.getCurrentState() ? "rifleaim" : "idle";
+                playerStateMachine.changeState(newState);
+                isShooting = false;
+            }
+        });
+
        
-          //  currentAnim = assets.shooting.name;
-            isShooting = true;     
-            const from = cameraEntity.getPosition();
-            const to = new pc.Vec3();
-            cameraEntity.camera?.screenToWorld(event.x, event.y, 1000, to);
-                
-            const result = app.systems.rigidbody?.raycastFirst(from, to);
-            if (result) {
-                if (result.entity.tags.has('enemy')) {
-                    console.log('Hit enemy!');
-                } else {
-                    console.log('Hit something else.');
-                }
-            } else {
-                console.log('No raycast hit');
+
+        
+        // Mouse move event to rotate the camera when dragging
+        app.mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
+            if (isPointerLocked) {
+                const dx = event.dx;
+                const dy = event.dy;
+
+                // Update yaw and pitch for camera
+                cameraYaw -= dx * sensitivity;
+                cameraPitch -= dy * sensitivity;
+
+                // Clamp pitch
+                cameraPitch = pc.math.clamp(cameraPitch, -45, 45);
+
+                // Update camera
+                updateCameraRotation(cameraYaw, cameraPitch);
             }
-        }
-
-        if (cameraEntity && cameraEntity.camera) {
-            const from = cameraEntity.getPosition(); 
-            const forward = cameraEntity.forward.clone(); 
-            const distance = 100; // distance raycast
-            const to = new pc.Vec3().add2(from, forward.mulScalar(distance));
-
-            if (app.systems.rigidbody) {
-               
-                const result = app.systems.rigidbody.raycastFirst(from, to);
-
-                if (result?.entity.health !== undefined) {
-                    result.entity.health -= 10;
-                    console.log(`Enemy health: ${result.entity.health}`);
-                
-                    if (result.entity.health <= 0) {
-                        console.log('Enemy defeated!');
-                        result.entity.destroy();
-                    }
-                } else {
-                    console.warn('Enemy entity does not have a health property');
-                }
-            // flash
-            const flash = new pc.Entity('muzzle_flash');
-            flash.addComponent('model', {
-                type: 'asset',
-                asset: assets.muzzle_flash
-            });
-            flash.setPosition(to);
-            app.root.addChild(flash);
-            setTimeout(() => {
-                flash.destroy();
-            }, 100);
-        }
+        });
     }
-    });
-    // Mouse up event to stop shooting
-    app.mouse.on(pc.EVENT_MOUSEUP, () => {
-        if (isShooting) {
-            if (playerStateMachine.getCurrentState() === "shooting") {
-                const newState = currentAnim ===   playerStateMachine.getCurrentState() ? "rifleaim":"idle"
-              //  const newState = currentAnim === assets.rifleaim.name ? "rifleaim" : "idle";
-                playerStateMachine.changeState(newState);   
-            }
-            isShooting = false;
-           
-        }
-    });
 
-    app.on('update', function() {
-        if (characterEntity.rigidbody) {
-            characterEntity.rigidbody.on('collisionstart', function(result) {
-                console.log('Character collided with:', result.other.entity.name);
-                // Xử lý va chạm ở đây
-            });
-        } else {
-            console.warn('Rigidbody component not found on character entity');
-        }
-    });
+    function updateCameraRotation(yaw: number, pitch: number) {
+        cameraEntity.setEulerAngles(pitch, yaw, 0);
+    }
 
-    // Mouse move event to rotate the camera when dragging
-    app.mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
-        if (isPointerLocked) {
-           
-            const dx = event.dx ;
-            const dy = event.dy ;
-    
-            // Cập nhật yaw (xoay ngang) và pitch (xoay dọc) của camera
-            cameraYaw -= dx * sensitivity;
-            cameraPitch -= dy * sensitivity;
-    
-            // Giới hạn pitch để tránh lật ngược
-            cameraPitch = pc.math.clamp(cameraPitch, -45, 45);
-    
-            // Chỉ cập nhật camera mà không tác động đến nhân vật
-            updateCameraRotation(cameraYaw, cameraPitch);
-        }
-    });
-}    
-
-function updateCameraRotation(yaw: number, pitch: number) {
-    cameraEntity.setEulerAngles(pitch, yaw, 0);
-}
-
-
-// Mouse down event to start dragging
-    app.mouse?.on(pc.EVENT_MOUSEDOWN, (event) => {
+    // Mouse down event to start dragging
+    app.mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
         isDragging = true;
         lastMouseX = event.x;
         lastMouseY = event.y;
     });
 
-// Mouse up event to stop dragging
-app.mouse?.on(pc.EVENT_MOUSEUP, () => {
-    isDragging = false;
-});
+    // Mouse up event to stop dragging
+    app.mouse?.on(pc.EVENT_MOUSEUP, () => {
+        isDragging = false;
+    });
 
-// Keyboard event for aiming
-keyboard.on(pc.EVENT_KEYDOWN, (event) => {
-    if (event.key === pc.KEY_Q) {
-        playerStateMachine.changeState("rifleaim");
-      //  characterEntity.animation?.play(assets.rifleaim.name, 0.1);
-      //playerStateMachine.changeState("");   
-       // currentAnim = assets.rifleaim.name;
-        console.log("Key Q pressed: Aiming with rifle");
-    }
-});
-
-keyboard.on(pc.EVENT_KEYUP, (event) => {
-    if (event.key === pc.KEY_Q) {
-        if (playerStateMachine.getCurrentState() === "rifleaim") {
-            playerStateMachine.changeState("idle");
-            // characterEntity.animation?.play(assets.idle.name, 0.1);
-            // currentAnim = assets.idle.name;
-            console.log("Key Q released: Back to idle");
+    // Keyboard event for aiming
+    keyboard.on(pc.EVENT_KEYDOWN, (event) => {
+        if (event.key === pc.KEY_Q) {
+            playerStateMachine.changeState("rifleaim");
+           
         }
-    }
-});
+    });
 
-app.on("update", (dt) => {
-    
-
-    // call movement
-    handleMovement(characterEntity, keyboard, cameraYaw, dt);
-
-
-    const charPosition = characterEntity.getPosition();
-    const charRotation = characterEntity.getRotation();
-
-    // set up location camera
-    let cameraOffset = new pc.Vec3(0, 2, -3); 
-
-    // rotation in camera set up
-    const cameraQuat = new pc.Quat().setFromEulerAngles(0, cameraYaw, 0);
-    cameraQuat.transformVector(cameraOffset, cameraOffset);
-
-    // update camera
-    const cameraPosition = new pc.Vec3().add2(charPosition, cameraOffset);
-    cameraEntity.setPosition(cameraPosition);
-
-    // Camera look at point
-    const lookAtPoint = new pc.Vec3().add2(charPosition, new pc.Vec3(0, 1.7, 0));  // Nhìn vào đầu nhân vật
-    cameraEntity.lookAt(lookAtPoint);
+    keyboard.on(pc.EVENT_KEYUP, (event) => {
+        if (event.key === pc.KEY_Q && playerStateMachine.getCurrentState() === "rifleaim") {
+            playerStateMachine.changeState("idle");
+          
+        }
+    });
 
     
-    if (charMovement.length() > 0) {
-        const angle = Math.atan2(charMovement.x, charMovement.z);
-        characterEntity.setEulerAngles(0, angle * pc.math.RAD_TO_DEG, 0);
-    }
 
-    // update animation
-    const moved = keyboard.isPressed(pc.KEY_W) || keyboard.isPressed(pc.KEY_S) || keyboard.isPressed(pc.KEY_A) || keyboard.isPressed(pc.KEY_D);
-    if (moved && playerStateMachine.getCurrentState() === "idle") {
-        playerStateMachine.changeState("running");
-    } else if (!moved && playerStateMachine.getCurrentState() === "running") {
-        playerStateMachine.changeState("idle");
-    }
+    app.on("update", (dt) => {
+       characterEntity.rigidbody?.on('collisionstart', (event) => {
+            console.log("Collision start");
+        });
+        // Call movement
+        handleMovement(characterEntity, keyboard, cameraYaw, dt);
+        const charPosition = characterEntity.getPosition();
 
-    
-});
+        // Set up camera position
+        let cameraOffset = new pc.Vec3(0, 2, -3);
+        const cameraQuat = new pc.Quat().setFromEulerAngles(0, cameraYaw, 0);
+        cameraQuat.transformVector(cameraOffset, cameraOffset);
+
+        const cameraPosition = new pc.Vec3().add2(charPosition, cameraOffset);
+        cameraEntity.setPosition(cameraPosition);
+
+        const lookAtPoint = new pc.Vec3().add2(charPosition, new pc.Vec3(0, 1.7, 0));
+        cameraEntity.lookAt(lookAtPoint);
+
+        if (charMovement.length() > 0) {
+            const angle = Math.atan2(charMovement.x, charMovement.z);
+            characterEntity.setEulerAngles(0, angle * pc.math.RAD_TO_DEG, 0);
+        }
+
+        // Update animation state
+        const moved = keyboard.isPressed(pc.KEY_W) || keyboard.isPressed(pc.KEY_S) || keyboard.isPressed(pc.KEY_A) || keyboard.isPressed(pc.KEY_D);
+        if (moved && playerStateMachine.getCurrentState() === "idle") {
+            playerStateMachine.changeState("running");
+        } else if (!moved && playerStateMachine.getCurrentState() === "running") {
+            playerStateMachine.changeState("idle");
+        }
+
+        // Crosshair positioning
+        const characterForward = characterEntity.forward;
+        const characterRight = characterEntity.right;
+        const characterUp = characterEntity.up;
+        const crosshairDistance = -2;
+
+        const forwardOffset = new pc.Vec3().copy(characterForward).mulScalar(crosshairDistance);
+        const sideOffset = new pc.Vec3().copy(characterRight).mulScalar(-0.5);
+        const upOffset = new pc.Vec3().copy(characterUp).mulScalar(1.5);
+
+        const crosshairPosition = new pc.Vec3()
+            .add2(characterEntity.getPosition(), forwardOffset)
+            .add(sideOffset)
+            .add(upOffset);
+        crosshairEntity.setPosition(crosshairPosition);
+
+        // Make the crosshair face the camera
+        crosshairEntity.lookAt(cameraEntity.getPosition());
+        crosshairEntity.rotateLocal(90, 0, 90);
+    });
+    console.log('Character Entity:', characterEntity); 
+    return characterEntity;
 }
-
