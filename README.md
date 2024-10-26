@@ -16,10 +16,10 @@ Welcome to **Warlords**, an exciting shooting game where you face waves of zombi
 
 ## 🎮 Gameplay
 - **Controls**:
-  - **Move**: Use **WASD** or **Arrow Keys** to move your character.
+  - **Move**: Use **WASD** to move your character.
   - **Aim**: Use your mouse to aim.
   - **Shoot**: Click the left mouse button to shoot.
-  - **Reload**: Press **R** to reload your weapon.
+  - **Aim** : Press **Q** to rifle aim
 
 - **Objective**: Survive against incoming waves of zombies for as long as possible. Collect weapons and power-ups to aid in your fight.
 ## ⚙️ How to Run
