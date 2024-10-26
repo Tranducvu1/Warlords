@@ -9,3 +9,4 @@ export function createCamera(app: pc.Application): pc.Entity {
     app.root.addChild(cameraEntity);
     return cameraEntity;
 }
+

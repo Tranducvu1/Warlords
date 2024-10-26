@@ -1,7 +1,7 @@
     // Light.ts
-    import * as pc from 'playcanvas';
+import * as pc from 'playcanvas';
 
-    export function createLight(app: pc.Application): void {
+export function createLight(app: pc.Application): void {
         const lightEntity = new pc.Entity('light');
         lightEntity.addComponent("light", {
             type: "directional",
@@ -10,4 +10,4 @@
         });
         lightEntity.setLocalEulerAngles(45, 0, 0);
         app.root.addChild(lightEntity);
-    }
+}

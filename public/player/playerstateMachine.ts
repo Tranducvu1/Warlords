@@ -9,7 +9,6 @@ export function createplayerstateMachine(characterEntity: pc.Entity, assets: Rec
             characterEntity.animation?.play(assets.idle.name, 0.2);
 
         });
-
         playerStateMachine.addState("running", () => {
             characterEntity.animation?.play(assets.running.name, 0.2);
         });
@@ -17,10 +16,16 @@ export function createplayerstateMachine(characterEntity: pc.Entity, assets: Rec
         playerStateMachine.addState("shooting", () => {
             characterEntity.animation?.play(assets.shooting.name, 0.2);
         });
-
+        
         playerStateMachine.addState("rifleaim", () => {
             characterEntity.animation?.play(assets.rifleaim.name, 0.2);
         });
+
+        playerStateMachine.addState("runningshooting", () => {
+            characterEntity.animation?.play(assets.runningshooting.name,0.2);
+        });
+
+        
 
         return playerStateMachine;
 

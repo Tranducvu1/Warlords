@@ -1,6 +1,9 @@
 import * as pc from 'playcanvas';
 import { createWeapon } from './createWeapon';
 
+
+
+
 export function handleWeapon(characterEntity, assets, app) {
     const characterModel = characterEntity.model;
     
@@ -9,8 +12,8 @@ export function handleWeapon(characterEntity, assets, app) {
         const rightHandBone = skinInstance.bones.find(bone => bone.name === 'mixamorig:RightHand');
         
         if (rightHandBone) {
-            const weaponHelper = createWeapon(characterEntity, assets, rightHandBone);
-            const muzzleFlashEntity = initializeMuzzleFlash(app, assets);
+            const weaponHelper = createWeapon(characterEntity, assets);
+          
             
             app.on('update', () => {
                 updateWeaponPosition(weaponHelper, rightHandBone);

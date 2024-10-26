@@ -1,6 +1,9 @@
 import * as pc from "playcanvas";
 
-export function createWeapon(characterEntity, assets, rightHandBone) {
+export function createWeapon(characterEntity, assets) {
+
+    
+
       const weaponHelper = new pc.Entity('weaponHelper');   
       characterEntity.addChild(weaponHelper);         
   

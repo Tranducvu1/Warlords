@@ -2,7 +2,9 @@ import * as pc from 'playcanvas';
 
 export function createMap(app: pc.Application) {
     app.start();
-    
+
+    const entities: pc.Entity[] = []; 
+
     // Helper function to create basic entity with model and collision
     const createEntity = (name: string, shape: string, position: pc.Vec3, scale: pc.Vec3, color: { r: number, g: number, b: number }) => {
         const entity = new pc.Entity(name);
@@ -12,11 +14,13 @@ export function createMap(app: pc.Application) {
         const material = new pc.StandardMaterial();
         material.diffuse = new pc.Color(color.r, color.g, color.b);
         material.update(); 
-        
+        entity.tags.add('map');
         // Add collision component
         entity.addComponent('collision', {
             type: 'box', 
-            halfExtents: new pc.Vec3(scale.x, scale.y, scale.z) 
+            halfExtents: new pc.Vec3(scale.x, scale.y, scale.z) ,
+            group: 1,
+            mask: 2 
         });
         
         // Add rigidbody component for physics
@@ -26,22 +30,15 @@ export function createMap(app: pc.Application) {
 
         entity.setLocalPosition(position.x, position.y, position.z);
         entity.setLocalScale(scale.x, scale.y, scale.z);
-        console.log(entity.getLocalPosition())
-        app.root.addChild(entity);
        
-        // Log the entity's components
-        console.log(entity);
-        console.log('Player Components:', {
-            model: entity.model,
-            rigidbody: entity.rigidbody,
-            collision: entity.collision
-        });
-        
+        app.root.addChild(entity);
+        entities.push(entity);
+       
         return entity;
     };
 
-    // Ground (grass)
-    createEntity("Ground", "box", new pc.Vec3(0, -0.5, 0), new pc.Vec3(100, 1, 100), { r: 0.1, g: 0.8, b: 0.1 });
+
+    
 
     // House
     const house = createEntity("House", "box", new pc.Vec3(0, 1, -10), new pc.Vec3(5, 5, 5), { r: 0.7, g: 0.5, b: 0.3 });
@@ -65,8 +62,40 @@ export function createMap(app: pc.Application) {
     createEntity("Cube1", "box", new pc.Vec3(-5, 0.5, -5), new pc.Vec3(2, 2, 2), { r: 0.2, g: 0.2, b: 0.7 });
     createEntity("Cube2", "box", new pc.Vec3(5, 0.5, 5), new pc.Vec3(2, 2, 2), { r: 0.7, g: 0.2, b: 0.2 });
 
-    // Lắng nghe sự kiện va chạm
-    app.on('collisionstart', function (result) {
-        console.log('Va chạm giữa:', result);
+    return entities; 
+}
+
+export function updateMap(app: pc.Application, dt: number, entities: pc.Entity[]) {
+    entities.forEach(entity => {
+        // Ensure collision component exists and is enabled
+        if (!entity.collision) {
+            entity.addComponent('collision', {
+                type: entity.model?.type === 'sphere' ? 'cone' : 'box',
+                halfExtents: new pc.Vec3(
+                    entity.getLocalScale().x / 2,
+                    entity.getLocalScale().y / 2,
+                    entity.getLocalScale().z / 2
+                )
+            });
+        }
+        
+        // Ensure rigidbody exists and is enabled
+        if (!entity.rigidbody) {
+            entity.addComponent('rigidbody', {
+                type: 'static',
+                friction: 0.5,
+                restitution: 0.5
+            });
+        }
+
+        // Update collision shapes based on current scale
+        if (entity.collision) {
+            entity.collision.halfExtents = new pc.Vec3(
+                entity.getLocalScale().x / 2,
+                entity.getLocalScale().y / 2,
+                entity.getLocalScale().z / 2
+            );
+        }
     });
 }
+

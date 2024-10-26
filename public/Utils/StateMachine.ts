@@ -22,5 +22,9 @@ export class stateMachine {
       getCurrentState() {
           return this.currentState;
       }
+      destroy() {
+          this.states = {};
+          this.currentState = "";
+      }
   }
   
