@@ -41,7 +41,6 @@ To run the game locally, follow these steps:
 4. **Run the development server:**:
    ```git
    npm run dev
-
 5. **Open your browser and go to http://localhost:3000 (or the URL specified in the terminal).**:
 
 💻 Installation
