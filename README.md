@@ -27,10 +27,9 @@ To run the game locally, follow these steps:
 
 1. **Clone the repository**:
    ```git
-   git clone https://github.com/Tranducvu1/Warlords.git
-
+git clone https://github.com/Tranducvu1/Warlords.git
 2. **Navigate to the project directory:**:
-   ```git
+```git
 cd Warlords
 3. **Install the dependencie**:
    ```git
