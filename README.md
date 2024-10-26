@@ -41,7 +41,7 @@ To run the game locally, follow these steps:
 4. **Run the development server:**:
    ```git
    npm run dev
-5. **Open your browser and go to http://localhost:3000 (or the URL specified in the terminal).**:
+5. **Open your browser and go to http://localhost:2900/public/index.html (or the URL specified in the terminal).**:
 
 💻 Installation
 Make sure you have Node.js installed on your machine. This project uses npm for managing dependencies.
