@@ -26,11 +26,13 @@ Welcome to **Warlords**, an exciting shooting game where you face waves of zombi
 To run the game locally, follow these steps:
 
 1. **Clone the repository**:
-```bash
+      ```bash
 git clone https://github.com/Tranducvu1/Warlords.git
+
 2. **Navigate to the project directory:**:
-```bash
-cd Warlords
+   ```bash
+   cd Warlords
+   
 3. **Install the dependencie**:
    ```bash
 npm install typescript --save-dev
