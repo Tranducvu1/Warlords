@@ -1,11 +1,28 @@
 <head>
-  <link rel="stylesheet" type="text/css" href="/style.css">
+  <link rel="stylesheet" type="text/css" href="/style.css"> <!-- Link to external CSS stylesheet -->
 </head>
 <body>
+  <!-- Background audio that plays automatically and loops -->
+  <audio autoplay loop id="backgroundAudio">
+    <source src="public/music/game-overdrive-253440.mp3" type="audio/mpeg">
+    Your browser does not support the audio tag. <!-- Fallback text for unsupported browsers -->
+  </audio>
+
+  <!-- Main menu container -->
   <div id="menu">
     <h1>Welcome to the Game</h1>
     <a href="./public/index.html">
       <button id="startButton">Start Game</button>
     </a>
   </div>
+
+  <style>
+    /* CSS to style the menu */
+    #menu {
+      position: relative; 
+      z-index: 1; 
+      text-align: center; /* Center text in the menu */
+      color: white; /* White text color for better contrast */
+    }
+  </style>
 </body>
