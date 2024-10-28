@@ -15,7 +15,7 @@ export function createGround(app: pc.Application): void {
     });
 
     // Scale the ground entity to make it large and flat
-    ground.setLocalScale(2000, 0.1, 2000); // Scale: 200 units wide, 0.1 units high, 200 units deep
+    ground.setLocalScale(500, 0.1, 500); // Scale: 200 units wide, 0.1 units high, 200 units deep
     ground.setLocalPosition(0, 0, 0); // Position it at the origin
 
     // Add a collision component to the ground entity for physics interactions
@@ -34,3 +34,5 @@ export function createGround(app: pc.Application): void {
     // Add the ground entity to the application's root entity for it to be part of the scene
     app.root.addChild(ground);
 }
+
+

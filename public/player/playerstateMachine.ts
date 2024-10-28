@@ -42,6 +42,13 @@ export function createplayerstateMachine(characterEntity: pc.Entity, assets: Rec
         characterEntity.animation?.play(assets.runningshooting.name, 0.2);
     });
 
+    //add the "reload" state to the state machine
+    playerStateMachine.addState("reloading", () => {
+        // Play the reload animation at a speed of 0.2
+        console.log("đang reloading");
+        characterEntity.animation?.play(assets.reloading.name, 0.2);
+    });
+
     // Return the constructed player state machine for use
     return playerStateMachine;
 }

@@ -1,4 +1,4 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
 /**
  * Attaches a weapon model to a character entity, positioning it correctly as a child object.
@@ -26,6 +26,7 @@ export function createWeapon(characterEntity: pc.Entity, assets: Record<string, 
 
     // Add weapon model as a child of the weapon helper, allowing it to inherit transformations.
     weaponHelper.addChild(weaponModel);
+    
     
     return weaponHelper; // Return the helper, which can be further manipulated or removed if needed.
 }

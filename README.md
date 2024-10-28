@@ -16,33 +16,29 @@ Welcome to **Warlords**, an exciting shooting game where you face waves of zombi
 
 ## 🎮 Gameplay
 - **Controls**:
-  - **Move**: Use **WASD** to move your character.
+  - **Move**: Use **WASD** or **Arrow Keys** to move your character.
   - **Aim**: Use your mouse to aim.
   - **Shoot**: Click the left mouse button to shoot.
-  - **Aim** : Press **Q** to rifle aim
+  - **Reload**: Press **R** to reload your weapon.
 
 - **Objective**: Survive against incoming waves of zombies for as long as possible. Collect weapons and power-ups to aid in your fight.
 ## ⚙️ How to Run
 To run the game locally, follow these steps:
 
 1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Tranducvu1/Warlords.git
-
+```bash
+git clone https://github.com/Tranducvu1/Warlords.git
 2. **Navigate to the project directory:**:
-   ```bash
-   cd Warlords
-
+```bash
+cd Warlords
 3. **Install the dependencie**:
-   ```bash
-   npm install typescript --save-dev
-   npm install @playcanvas/engine --save
-
+```bash
+npm install typescript --save-dev
+npm install @playcanvas/engine --save
 4. **Run the development server:**:
-   ```git
-   npm run dev
-5. **Open your browser and go to http://localhost:2900/public/index.html (or the URL specified in the terminal).**:
-
+```git
+npm run dev
+5. **Open your browser and go to http://localhost:3000 (or the URL specified in the terminal).**:
 💻 Installation
 Make sure you have Node.js installed on your machine. This project uses npm for managing dependencies.
 

@@ -3,6 +3,8 @@ import { handleWeapon } from '../Weapon/Weapon';
 import { createWeapon } from '../Weapon/createWeapon';
 import { createplayerstateMachine } from './playerstateMachine';
 import { initializeCrosshairEntity } from './crosshair';
+import { CharacterEntity } from './characterEntity.ts';
+
 
 /**
  * Creates a character entity and sets up its properties and camera.
@@ -10,11 +12,11 @@ import { initializeCrosshairEntity } from './crosshair';
  * @param {pc.Application} app - The PlayCanvas application instance.
  * @param {Object} assets - The assets used for the character.
  * @param {pc.Entity} cameraEntity - The camera entity to position and orient.
- * @returns {pc.Entity} The created character entity.
+ * @returns {CharacterEntity} The created character entity.
  */
 export function createCharacterEntity(app, assets, cameraEntity) {
     // Create a new entity for the character
-    const characterEntity = new pc.Entity("character");
+    const characterEntity = new CharacterEntity("character", 100,0, app, assets);
 
     // Initialize the crosshair entity for aiming
     const crosshairEntity = initializeCrosshairEntity(app, assets);
@@ -24,7 +26,7 @@ export function createCharacterEntity(app, assets, cameraEntity) {
 
     // Add an animation component to the character with various states
     characterEntity.addComponent("animation", {
-        assets: [assets.idle, assets.running, assets.shooting, assets.rifleaim, assets.runningshooting],
+        assets: [assets.idle, assets.running, assets.shooting, assets.rifleaim, assets.runningshooting, assets.reloading], // Add animation assets
     });
 
     // Get the character's forward, right, and up directions
@@ -63,7 +65,7 @@ export function createCharacterEntity(app, assets, cameraEntity) {
 
     // Set the initial orientation and position of the character
     characterEntity.setLocalEulerAngles(0, 0, 0); // Face forward
-    characterEntity.setLocalPosition(15, 0, -20); // Initial position in the scene
+   
 
     // Add physics components for character dynamics
     characterEntity.addComponent("rigidbody", {
@@ -85,6 +87,7 @@ export function createCharacterEntity(app, assets, cameraEntity) {
         height: 1, // Set the height of the capsule
     });
 
+    characterEntity.setLocalPosition(-100,0.05,0);
     // Add the character entity to the application's root for rendering
     app.root.addChild(characterEntity);
 

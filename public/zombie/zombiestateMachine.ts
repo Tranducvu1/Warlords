@@ -1,4 +1,3 @@
-// ZombieStateMachine.ts
 import * as pc from 'playcanvas';
 import { stateMachine } from '../Utils/StateMachine';
 
@@ -24,7 +23,12 @@ export function createZombieStateMachine(EnemyEntity: pc.Entity, assets: Record<
 
     // Attack state: plays the attack animation
     zombieStateMachine.addState("zombieattack", () => {
-        EnemyEntity.animation?.play(assets.zombieattack.name, 0.2);  
+        EnemyEntity.animation?.play(assets.zombieattack.name, 0.2);
+    });
+
+    // Damage state: plays the hit animation
+    zombieStateMachine.addState("zombiedamage", () => {
+        EnemyEntity.animation?.play(assets.zombiedamage.name, 0.2); // Animation khi bị trúng đòn
     });
 
     // Death state: plays the death animation

@@ -1,7 +1,8 @@
 import * as pc from 'playcanvas';
 import { MOVEMENT_CONFIG, createInitialState, initializeComponents } from './CharacterMovementSetup';
 import { setupEventListeners } from './CharacterEventHandlers';
-import { EnemyEntity } from '../zombie/EnemyEntity';
+
+import { triggerMuzzleFlash } from '../muzzle/triggleMuzzle';
 
 /**
  * Creates a movement handler for the character in the game.
@@ -22,10 +23,11 @@ export function createMovementHandler(
     keyboard: pc.Keyboard,
     assets: any,
     crosshairEntity: pc.Entity,
-    playerStateMachine: any
+    playerStateMachine: any,
 ) {
     const state = createInitialState(); // Initialize character state
     const charMovement = new pc.Vec3(); // Vector for character movement
+    
 
     // Initialize components for the character
     initializeComponents(characterEntity, assets);
@@ -38,78 +40,89 @@ export function createMovementHandler(
         characterEntity,
         keyboard,
         playerStateMachine,
-        crosshairEntity
+        crosshairEntity,
+        
     );
 
-    /**
-     * Shows an effect when the character hits an enemy.
-     *
-     * @param {EnemyEntity} enemyEntity - The enemy that was hit.
-     */
-    function showHitEffect(enemyEntity) {
-        console.log(`Hit effect shown for: ${enemyEntity.name}`);
-        // You can create special effects or sounds here
-    }
+    
+    
 
     /**
      * Handles keyboard input to control character movement and states.
      *
      * @param {number} dt - The delta time for frame updates.
      */
-    function handleKeyboardInput(dt) {
-        let isMoving = false; // Flag to check if the character is moving
-        charMovement.set(0, 0, 0); // Reset movement vector
+    /**
+ * Handles keyboard input to control character movement and states.
+ *
+ * @param {number} dt - The delta time for frame updates.
+ */
+function handleKeyboardInput(dt) {
+    let isMoving = false; // Flag to check if the character is moving
+    charMovement.set(0, 0, 0); // Reset movement vector
 
-        // Check for movement input and update character movement vector
-        if (keyboard.isPressed(pc.KEY_W)) {
-            charMovement.z += MOVEMENT_CONFIG.CHAR_SPEED * dt; // Move forward
-            isMoving = true;
-            if (!state.isAiming) updateCharacterRotation(0); // Update rotation if not aiming
-        }
-        else if (keyboard.isPressed(pc.KEY_S)) {
-            charMovement.z -= MOVEMENT_CONFIG.CHAR_SPEED * dt; // Move backward
-            isMoving = true;
-            if (!state.isAiming) updateCharacterRotation(180); // Update rotation if not aiming
-        }
-        else if (keyboard.isPressed(pc.KEY_A)) {
-            charMovement.x += MOVEMENT_CONFIG.CHAR_SPEED * dt; // Move left
-            isMoving = true;
-            if (!state.isAiming) updateCharacterRotation(90); // Update rotation if not aiming
-        }
-        else if (keyboard.isPressed(pc.KEY_D)) {
-            charMovement.x -= MOVEMENT_CONFIG.CHAR_SPEED * dt; // Move right
-            isMoving = true;
-            if (!state.isAiming) updateCharacterRotation(-90); // Update rotation if not aiming
-        }
+    // Variables for directional movement
+    let forward = 0;
+    let right = 0;
 
-        // Update character rotation based on aiming state
-        if (state.isAiming || !isMoving) {
-            updateCharacterRotation(MOVEMENT_CONFIG.cameraYaw);
-        }
+    // Check for movement input from WASD
+    if (keyboard.isPressed(pc.KEY_W) || keyboard.isPressed(pc.KEY_UP)) {
+        forward += 1; // Move forward
+    }
+    if (keyboard.isPressed(pc.KEY_S) || keyboard.isPressed(pc.KEY_DOWN)) {
+        forward -= 1; // Move backward
+    }
+    if (keyboard.isPressed(pc.KEY_A) || keyboard.isPressed(pc.KEY_LEFT)) {
+        right += 1; // Move left
+    }
+    if (keyboard.isPressed(pc.KEY_D) || keyboard.isPressed(pc.KEY_RIGHT)) {
+        right -= 1; // Move right
+    }
 
-        // Change character state based on movement and aiming
-        if (isMoving) {
-            if (playerStateMachine.getCurrentState() === "idle") {
-                characterEntity.animation?.play(assets.running.name, 0.2); // Play running animation
-                playerStateMachine.changeState("running"); // Change state to running
-            }
-        } else {
-            if (playerStateMachine.getCurrentState() === "running") {
-                characterEntity.animation?.play(assets.idle.name, 0.2); // Play idle animation
-                playerStateMachine.changeState("idle"); // Change state to idle
-                updateCharacterRotation(MOVEMENT_CONFIG.cameraYaw); // Update rotation to camera yaw
-            }
-        }
+    // Normalize diagonal movement
+    if (forward !== 0 || right !== 0) {
+        let magnitude = Math.sqrt(forward * forward + right * right);
+        forward /= magnitude;
+        right /= magnitude;
+    }
 
-        // Update state if the character is aiming
-        if (state.isAiming) {
-            if (isMoving) {
-                playerStateMachine.changeState("runningshooting"); // Change state to running and shooting
-            } else {
-                playerStateMachine.changeState("rifleaim"); // Change state to rifle aiming
-            }
+    // Update character movement based on direction
+    charMovement.x += right * MOVEMENT_CONFIG.CHAR_SPEED * dt; // Update x direction
+    charMovement.z += forward * MOVEMENT_CONFIG.CHAR_SPEED * dt; // Update z direction
+
+    // Update character rotation based on movement direction
+    if (forward !== 0 || right !== 0) {
+        let angle = Math.atan2(right, forward) * (180 / Math.PI); // Calculate angle in degrees
+        updateCharacterRotation(angle); // Update rotation based on direction
+        isMoving = true; // Set moving flag
+    } else {
+        // If not moving, keep character facing the current camera yaw
+        updateCharacterRotation(MOVEMENT_CONFIG.cameraYaw);
+    }
+
+    // Change character state based on movement and aiming
+    if (isMoving) {
+        if (playerStateMachine.getCurrentState() === "idle") {
+            characterEntity.animation?.play(assets.running.name, 0.2); // Play running animation
+            playerStateMachine.changeState("running"); // Change state to running
+        }
+    } else {
+        if (playerStateMachine.getCurrentState() === "running") {
+            characterEntity.animation?.play(assets.idle.name, 0.2); // Play idle animation
+            playerStateMachine.changeState("idle"); // Change state to idle
         }
     }
+
+    // Update state if the character is aiming
+    if (state.isAiming) {
+        if (isMoving) {
+            playerStateMachine.changeState("runningshooting"); // Change state to running and shooting
+        } else {
+            playerStateMachine.changeState("rifleaim"); // Change state to rifle aiming
+        }
+    }
+}
+
 
     /**
      * Updates the character's rotation based on the given angle.

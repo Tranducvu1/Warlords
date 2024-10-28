@@ -21,10 +21,13 @@ export interface MovementState {
     isDragging: boolean;               // True if character is dragging an object
     cameraPitch: number;               // Current camera pitch angle
     lastMouseX: number;                // Last recorded mouse X position
-    lastMouseY: number;                // Last recorded mouse Y position
-    isAiming: boolean;                 // True if character is aiming
+    lastMouseY: number;       
+    currentAmmo : number;         // Last recorded mouse Y position
+    isAiming: boolean;    
+    isReloading: boolean;             // True if character is aiming
     lastShotTime: number;              // Timestamp of the last shot fired
-    shootingCooldown: number;          // Cooldown period (ms) between shots
+    shootingCooldown: number;  
+    lastReloadTime: number;        // Cooldown period (ms) between shots
 }
 
 // Initialize the default state for the character’s movement and actions
@@ -36,11 +39,19 @@ export const createInitialState = (): MovementState => ({
     isDragging: false,
     cameraPitch: MOVEMENT_CONFIG.INITIAL_CAMERA_PITCH,
     lastMouseX: 0,
+    currentAmmo : 30,
+    isReloading: false,
     lastMouseY: 0,
     isAiming: false,
     lastShotTime: 0,
+    lastReloadTime: 0,
     shootingCooldown: 500               // Default cooldown time in milliseconds
 });
+
+export const AMMO_CONFIG = {
+    MAX_AMMO: 30,
+    RELOAD_TIME: 2000
+};
 
 // Initialize the character entity's physical and collision components
 export function initializeComponents(characterEntity: pc.Entity, assets: any) {

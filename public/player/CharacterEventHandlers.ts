@@ -1,20 +1,18 @@
+// Import the entire PlayCanvas library to utilize classes and functions within this game engine.
 import * as pc from 'playcanvas';
-import { MovementState, MOVEMENT_CONFIG } from './CharacterMovementSetup';
+
+// Import configuration objects and states necessary for character movement and ammo handling.
+import { MovementState, MOVEMENT_CONFIG, AMMO_CONFIG } from './CharacterMovementSetup';
+
+// Import enemy entity class to handle interactions with enemy objects in the game.
 import { EnemyEntity } from '../zombie/EnemyEntity';
 
+// Import character entity class to manage player-specific properties and methods.
+import { CharacterEntity } from './characterEntity.ts';
+
 /**
- * Sets up events related to character control,
- * including handling mouse and keyboard inputs, as well as conditions
- * related to the character and camera states.
- *
- * @param {pc.Application} app - The current PlayCanvas application object.
- * @param {MovementState} state - The movement state of the character.
- * @param {pc.Entity} cameraEntity - The camera entity in the game.
- * @param {pc.Entity} characterEntity - The character entity in the game.
- * @param {pc.Keyboard} keyboard - The keyboard object to track key presses.
- * @param {any} playerStateMachine - The state machine managing the character's states.
- * @param {pc.Entity} crosshairEntity - The entity displaying the crosshair.
- * @returns {Function} - A cleanup function for the events when no longer needed.
+ * Sets up event listeners for handling game interactions such as shooting, aiming, reloading, and camera movement.
+ * This function handles player input and game state transitions.
  */
 export function setupEventListeners(
     app: pc.Application,
@@ -25,172 +23,197 @@ export function setupEventListeners(
     playerStateMachine: any,
     crosshairEntity: pc.Entity
 ) {
-    let isMouseDown = false; // Variable to check mouse state
+    let isMouseDown = false; // Tracks mouse button state to prevent unintended multiple shots.
 
-    // Function to handle changes in pointer lock state
+    // Initialize shooting sound effect with properties like volume and preload.
+    const shootingSound = new Audio('../music/boom.mp3');
+    shootingSound.volume = 1.0;
+    shootingSound.preload = 'auto';
+
+    // Error handling for audio loading issues.
+    shootingSound.addEventListener('error', function(e) {
+        console.error('Error loading shooting sound:', e);
+    });
+
+    // Pointer lock change handler to manage locked pointer states for immersive controls.
     const handlePointerLockChange = () => {
         state.isPointerLocked = document.pointerLockElement === app.graphicsDevice.canvas;
     };
     document.addEventListener('pointerlockchange', handlePointerLockChange, false);
 
-    // Adjust camera position to be closer and lower
+    // Adjust camera position to maintain a consistent viewpoint relative to the player.
     const adjustCameraPosition = () => {
         const cameraPos = cameraEntity.getLocalPosition();
-
-        // Adjust camera height and distance
-        cameraPos.y = 2.5; // Lower height
-        cameraPos.z = -4.5; // Bring camera closer to the character
-
-        cameraEntity.setLocalPosition(cameraPos); // Set the new position for the camera
+        cameraPos.y = 2.5;
+        cameraPos.z = -4.5;
+        cameraEntity.setLocalPosition(cameraPos);
     };
-
-    // Apply camera position adjustment
     adjustCameraPosition();
 
-    // Calculate shooting direction from the crosshair
+    // Calculates the direction in which the player is shooting, based on crosshair and camera positions.
     const calculateShootingDirection = () => {
         const crosshairPosition = crosshairEntity.getPosition();
         const cameraPosition = cameraEntity.getPosition();
-
-        // Create a direction vector from the camera to the crosshair
         const direction = new pc.Vec3();
-        direction.sub2(crosshairPosition, cameraPosition); // Calculate the direction vector
-        direction.normalize(); // Normalize the direction vector
-
-        return direction; // Return the direction vector
+        direction.sub2(crosshairPosition, cameraPosition);
+        direction.normalize();
+        return direction;
     };
 
-    // Handle mouse down events
-    const handleMouseDown = (event: any) => {
-        if (isMouseDown) return; // Do nothing if the mouse is already down
-        isMouseDown = true; // Mark that the mouse is down
-        console.log('Mouse down');
+    // Handles ammo reloading, sets a timeout based on reload time, and manages state transitions.
+    const reloadAmmo = () => {
+        if (state.isReloading) return;
 
-        // Check pointer lock status and request it if necessary
-        if (!state.isPointerLocked) {
-            app.graphicsDevice.canvas.requestPointerLock();
-            return;
-        }
+        console.log("Reloading... cannot shoot.");
+        state.isReloading = true;
+        playerStateMachine.changeState("reloading");
 
-        // Check conditions to perform shooting action
-        if (state.isAiming && !state.isShooting && !state.hasDealtDamage) {
-            const currentTime = Date.now();
-            if (currentTime - state.lastShotTime < state.shootingCooldown) {
-                return; // If cooldown time remains, do not shoot
-            }
+        setTimeout(() => {
+            state.currentAmmo = AMMO_CONFIG.MAX_AMMO;
+            state.isReloading = false; // Reset reloading state after completion
+            console.log("Reload complete!");
 
-            state.isShooting = true; // Mark shooting state
-            state.lastShotTime = currentTime; // Update shot time
-            playerStateMachine.changeState("shooting"); // Change state to "shooting"
-
-            // Use the crosshair position as the starting point for the raycast
-            const from = crosshairEntity.getPosition();
-            const shootingDirection = calculateShootingDirection();
-            const to = new pc.Vec3().add2(
-                from, 
-                shootingDirection.mulScalar(MOVEMENT_CONFIG.RAYCAST_DISTANCE) // Calculate raycast endpoint
-            );
-
-            // Perform raycast
-            const result = app.systems.rigidbody?.raycastFirst(from, to);
-
-            // Check if it collided with any object
-            if (result && result.entity) {
-                if (result.entity.tags.has("enemy")) { // Check if the object is an enemy
-                    console.log("Hit enemy from crosshair");
-                    if (result.entity instanceof EnemyEntity) {
-                        result.entity.takeDamage(10); // Call function to deal damage to the enemy
-                        state.hasDealtDamage = true; // Mark that damage has been dealt
-
-                        // Optional: Add visual feedback for hitting
-                        // Particle effects or hit markers can be added here
-                    }
-                }
-            }
-
-            // Optional: Add visual feedback for shooting
-            // Fire effects or bullet trails can be added here
-        }
-
-        // Mark that the mouse is dragging
-        state.isDragging = true;
-        state.lastMouseX = event.x; // Update current mouse x coordinate
-        state.lastMouseY = event.y; // Update current mouse y coordinate
-    };
-
-    // Handle mouse up events
-    const handleMouseUp = () => {
-        console.log('Mouse up');
-        isMouseDown = false; // Mark that the mouse is no longer down
-
-        if (state.isShooting) {
-            state.isShooting = false; // End shooting state
-            state.hasDealtDamage = false; // Mark that no damage has been dealt
-
-            // Change state based on whether aiming or not
+            // Transition to appropriate idle or aiming state once reload is complete
             if (state.isAiming) {
                 playerStateMachine.changeState("rifleaim");
             } else {
                 playerStateMachine.changeState("idle");
             }
-        }
-
-        state.isDragging = false; // Mark that dragging is no longer happening
+        }, AMMO_CONFIG.RELOAD_TIME);
     };
 
-    // Handle mouse movement events
-    const handleMouseMove = (event: any) => {
-        if (state.isPointerLocked) { // Check if the pointer is locked
-            const dx = event.dx; // Calculate change in x coordinate
-            const dy = event.dy; // Calculate change in y coordinate
-            if (dx !== 0 || dy !== 0) { // If there's a change
-                MOVEMENT_CONFIG.cameraYaw += dx * MOVEMENT_CONFIG.CAMERA_SENSITIVITY; // Update camera yaw
-                state.cameraPitch = pc.math.clamp( // Update camera pitch with clamping
+    // Handles shooting mechanics when the mouse is pressed.
+    const handleMouseDown = (event) => {
+        if (isMouseDown || state.isReloading) return; // Prevent shooting during reload
+        isMouseDown = true;
+
+        // If pointer is not locked, request lock to start aiming.
+        if (!state.isPointerLocked) {
+            app.graphicsDevice.canvas.requestPointerLock();
+            return;
+        }
+
+        // Check conditions for shooting: aiming, not currently shooting, ammo available, etc.
+        if (state.isAiming && !state.isShooting && !state.hasDealtDamage && state.currentAmmo > 0) {
+            const currentTime = Date.now();
+            if (currentTime - state.lastShotTime < state.shootingCooldown) return;
+            shootingSound.currentTime = 0; // Reset sound to play from start
+            shootingSound.play().catch(error => console.error('Error playing sound:', error));
+            state.isShooting = true;
+            state.lastShotTime = currentTime;
+            state.currentAmmo -= 1;
+            console.log(`Ammo: ${state.currentAmmo}`);
+
+            // Trigger reload if out of ammo
+            if (state.currentAmmo <= 0) {
+                reloadAmmo(); 
+                return;
+            }
+
+            playerStateMachine.changeState("shooting");
+            console.log("Shooting...");
+
+            const from = crosshairEntity.getPosition();
+            const shootingDirection = calculateShootingDirection();
+            const to = new pc.Vec3().add2(from, shootingDirection.mulScalar(MOVEMENT_CONFIG.RAYCAST_DISTANCE));
+
+            // Perform raycasting to detect hit objects, specifically looking for enemies.
+            const result = app.systems.rigidbody?.raycastFirst(from, to);
+
+            if (result && result.entity && result.entity.tags.has("enemy")) {
+                console.log("Hit enemy from crosshair");
+                if (result.entity instanceof EnemyEntity) {
+                    result.entity.takeDamage(10);
+                    state.hasDealtDamage = true;
+                    if (result.entity.getHealth() === 0) {
+                        const char = characterEntity as CharacterEntity;
+                        const newExp = char.getExperience(10);
+                        console.log(`Experience gained! New total: ${newExp}`);
+                        result.entity.die();
+                    }
+                }
+            }
+        }
+
+        state.isDragging = true;
+        state.lastMouseX = event.x;
+        state.lastMouseY = event.y;
+    };
+
+    // Handles mouse release to reset shooting and aiming states.
+    const handleMouseUp = () => {
+        isMouseDown = false;
+        if (state.isShooting) {
+            state.isShooting = false;
+            state.hasDealtDamage = false;
+
+            // Transition to idle or aiming state if not reloading.
+            if (!state.isReloading) {
+                playerStateMachine.changeState(state.isAiming ? "rifleaim" : "idle");
+            }
+        }
+        state.isDragging = false;
+    };
+
+    // Handles mouse movement for controlling camera angles based on pointer lock.
+    const handleMouseMove = (event) => {
+        if (state.isReloading) return;  // Skip if reloading
+        if (state.isPointerLocked) {
+            const dx = event.dx;
+            const dy = event.dy;
+            if (dx !== 0 || dy !== 0) {
+                MOVEMENT_CONFIG.cameraYaw += dx * MOVEMENT_CONFIG.CAMERA_SENSITIVITY;
+                state.cameraPitch = pc.math.clamp(
                     state.cameraPitch + dy * MOVEMENT_CONFIG.CAMERA_SENSITIVITY,
                     -MOVEMENT_CONFIG.MAX_CAMERA_PITCH,
                     MOVEMENT_CONFIG.MAX_CAMERA_PITCH
                 );
-                characterEntity.setEulerAngles(0, MOVEMENT_CONFIG.cameraYaw, 0); // Update rotation angle for character
+                characterEntity.setEulerAngles(0, MOVEMENT_CONFIG.cameraYaw, 0);
             }
         }
     };
 
-    // Handle key down events
-    const handleKeyDown = (event: any) => {
+    // Handles keyboard down events for toggling aiming and preventing actions during reloading.
+    const handleKeyDown = (event) => {
+        if (state.isReloading) {
+            console.log("Cannot aim while reloading.");
+            playerStateMachine.changeState("reloading");
+            return; 
+        }
+
         if (event.key === pc.KEY_Q) {
-            state.isAiming = true; // Mark aiming state
-            const currentState = playerStateMachine.getCurrentState();
-            // Change state based on current state
+            state.isAiming = true;
             playerStateMachine.changeState(
-                currentState === "running" ? "runningshooting" : "rifleaim"
+                playerStateMachine.getCurrentState() === "shooting" ? "runningshooting" : "rifleaim"
             );
+            console.log("Aiming...");
         }
     };
 
-    // Handle key up events
-    const handleKeyUp = (event: any) => {
+    // Handles keyboard release to reset aiming state and transition to idle.
+    const handleKeyUp = (event) => {
         if (event.key === pc.KEY_Q) {
-            state.isAiming = false; // Mark not aiming
-            const currentState = playerStateMachine.getCurrentState();
-            // Change state based on current state
-            playerStateMachine.changeState(
-                currentState === "runningshooting" ? "running" : "idle"
-            );
+            state.isAiming = false;
+
+            // Only switch to idle if not reloading.
+            if (!state.isReloading) {
+                playerStateMachine.changeState("idle");
+                console.log("Stopped aiming...");
+            }
         }
     };
 
-    // Register mouse events
+    // Attach event listeners for mouse and keyboard interactions.
     if (app.mouse) {
         app.mouse.on(pc.EVENT_MOUSEDOWN, handleMouseDown);
         app.mouse.on(pc.EVENT_MOUSEUP, handleMouseUp);
         app.mouse.on(pc.EVENT_MOUSEMOVE, handleMouseMove);
     }
 
-    // Register keyboard events
     keyboard.on(pc.EVENT_KEYDOWN, handleKeyDown);
     keyboard.on(pc.EVENT_KEYUP, handleKeyUp);
 
-    // Return a cleanup function when no longer needed
+    // Returns a function to remove all event listeners, useful for cleanup on exit.
     return () => {
         document.removeEventListener('pointerlockchange', handlePointerLockChange);
         if (app.mouse) {

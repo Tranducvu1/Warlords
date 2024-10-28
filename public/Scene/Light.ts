@@ -13,7 +13,7 @@ export function createLight(app: pc.Application): void {
     lightEntity.addComponent("light", {
         type: "directional", // Directional light, similar to sunlight
         color: new pc.Color(1, 1, 1), // White light
-        intensity: 0.2 // Lower intensity for a softer effect
+        intensity: 1.0 // Increased intensity for brighter light
     });
 
     // Set the rotation angle of the light to illuminate the scene from a specific angle
@@ -24,8 +24,8 @@ export function createLight(app: pc.Application): void {
 
     // Optional: create a soft, ambient light
     const lightColor = new pc.Color(1, 1, 1); // White color
-    const lightIntensity = 0.1; // Low intensity for ambient light
-    const lightDistance = 10; // Distance the light affects
+    const lightIntensity = 0.5; // Increased intensity for ambient light
+    const lightDistance = 20; // Increased distance the light affects
 
     // Create a point light for a soft effect
     const pointLight = new pc.Entity('pointLight');
@@ -33,7 +33,7 @@ export function createLight(app: pc.Application): void {
         type: 'point', // Point light
         color: lightColor,
         intensity: lightIntensity,
-        range: lightDistance // Range of light effect
+        range: lightDistance // Increased range of light effect
     });
 
     // Set position for the point light

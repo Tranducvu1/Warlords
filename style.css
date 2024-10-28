@@ -73,11 +73,10 @@ h1 {
   #startButton {
       font-size: 20px; /* Smaller button size for small screens */
   }
+}/* CSS to style the menu */
+#menu {
+  position: relative; 
+  z-index: 1; 
+  text-align: center; /* Center text in the menu */
+  color: white; /* White text color for better contrast */
 }
-    /* CSS to style the menu */
-    #menu {
-      position: relative; 
-      z-index: 1; 
-      text-align: center; /* Center text in the menu */
-      color: white; /* White text color for better contrast */
-    }

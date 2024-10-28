@@ -1,6 +1,4 @@
 import * as pc from 'playcanvas';
-
-// Import necessary modules for different game components
 import { createZombieEntity } from './zombie/createZombieEntity';
 import { createCamera } from './Scene/Camera';
 import { createLight } from './Scene/Light';
@@ -13,7 +11,6 @@ import { initializeCrosshairEntity } from './player/crosshair';
 import { createMovementHandler } from './player/CharacterMovement';
 import { handleZombieStates } from './zombie/handleZombieStates';
 import { setupRaycasting } from './player/RaycastingSystem';
-import { addBackgroundMusic } from './music/backgroundMusic';
 
 // Set configuration for Wasm module
 pc.WasmModule.setConfig("Ammo", {
@@ -21,6 +18,20 @@ pc.WasmModule.setConfig("Ammo", {
     glueUrl: "./Utils/ammo.wasm.js",
     wasmUrl: "./Utils/ammo.wasm.wasm",
 });
+
+// Function to generate a random position within a specified range
+function getRandomPosition(range) {
+    return Math.random() * range - range / 2; // Returns a random position within the specified range
+}
+
+// Function to check if a position is at least `minDistance` away from all existing positions
+function isPositionFarEnough(position, existingPositions, minDistance) {
+    return existingPositions.every((pos) => {
+        const dx = position.x - pos.x;
+        const dz = position.z - pos.z;
+        return Math.sqrt(dx * dx + dz * dz) >= minDistance;
+    });
+}
 
 // Main initialization function
 window.onload = async () => {
@@ -50,8 +61,26 @@ window.onload = async () => {
             createLight(app);
             createGround(app);
 
-            // Create game entities
-            const zombieEntity = createZombieEntity(app, assets, 15, 0.5, 0);
+            // for (let i = 0; i < zombieCount; i++) { n
+            //     let position;
+            //     do {
+            //         position = {
+            //             x: getRandomPosition(spawnRange),
+            //             y: 0.5,
+            //             z: getRandomPosition(spawnRange),
+            //         };
+            //     } while (!isPositionFarEnough(position, zombies.map(z => ({ x: z.getPosition().x, z: z.getPosition().z })), minDistance));
+            
+            //     const zombieEntity = createZombieEntity(app, assets, position.x, position.y, position.z);
+            //     zombies.push(zombieEntity);
+            // } O(n) complexity for checking distance between all zombies and new position is not efficient
+            // Create zombie entities at random positions within a specified range O(n) complexity   
+            const zombieEntity1 = createZombieEntity(app, assets, 0, 0.1, 15);
+            const zombieEntity2 =   createZombieEntity(app, assets, 15, 0.1, 30);
+            const zombieEntity3 = createZombieEntity(app, assets, 0, 0.1, 0);
+            const zombieEntity4 =createZombieEntity(app, assets, 30, 0.1, -25);
+            const zombieEntity5 = createZombieEntity(app, assets, 30, 0.1, -45);
+            // Create other game entities
             const characterEntity = createCharacterEntity(app, assets, cameraEntity);
             const crosshairEntity = initializeCrosshairEntity(app, assets);
             const playerStateMachine = createplayerstateMachine(characterEntity, assets);
@@ -72,15 +101,21 @@ window.onload = async () => {
                 playerStateMachine
             );
 
-            // Add background music
-            addBackgroundMusic(app);
             setupRaycasting(app, playerStateMachine, cameraEntity, crosshairEntity, assets);
 
             // Main update loop
             app.on("update", (dt) => {
                 updateMap(app, dt, entities);
                 movementUpdate(dt);
-                handleZombieStates(assets, characterEntity, zombieEntity);
+
+
+                // Update zombie states
+                handleZombieStates(assets, characterEntity, zombieEntity1);
+                handleZombieStates(assets, characterEntity, zombieEntity2);
+                handleZombieStates(assets, characterEntity, zombieEntity3);
+                handleZombieStates(assets, characterEntity, zombieEntity4);
+                handleZombieStates(assets, characterEntity, zombieEntity5);
+               
             });
         });
 

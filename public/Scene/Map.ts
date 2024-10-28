@@ -11,7 +11,7 @@ export function createMap(app: pc.Application) {
 
     const entities: pc.Entity[] = [];
 
-    // Helper function to create basic entity with model and collision
+    // Helper function to create a basic entity with a model and collision
     const createEntity = (name: string, shape: string, position: pc.Vec3, scale: pc.Vec3, color: { r: number, g: number, b: number }) => {
         const entity = new pc.Entity(name);
 
@@ -47,25 +47,25 @@ export function createMap(app: pc.Application) {
         return entity;
     };
 
-    // Ground
-    createEntity("Ground", "box", new pc.Vec3(0, 0, 0), new pc.Vec3(100, 0.1, 100), { r: 0.4, g: 0.5, b: 0.4 });
+    // Create the ground entity
+    createEntity("Ground", "box", new pc.Vec3(0, 0.1, 0), new pc.Vec3(100, 0.1, 100), { r: 0.4, g: 0.5, b: 0.4 });
 
-    // Zombie spawn points
+    // Create zombie spawn points
     for (let i = -20; i <= 20; i += 10) {
         createEntity(`ZombieSpawnPoint${i}`, "box", new pc.Vec3(i, 0.5, 20), new pc.Vec3(1, 0.1, 1), { r: 0.3, g: 0.1, b: 0.1 });
     }
 
-    // House
+    // Create a house entity
     const house = createEntity("House", "box", new pc.Vec3(0, 1.5, -10), new pc.Vec3(5, 5, 5), { r: 0.7, g: 0.5, b: 0.3 });
 
-    // Roof (Pyramid)
+    // Create a roof entity (Pyramid shape)
     const roof = createEntity("Roof", "cone", new pc.Vec3(0, 5.5, -10), new pc.Vec3(5, 3, 5), { r: 0.9, g: 0.1, b: 0.1 });
 
-    // Slide (Cube ramp)
+    // Create a slide entity (Cube ramp)
     const slide = createEntity("Slide", "box", new pc.Vec3(10, 1.5, -10), new pc.Vec3(1, 0.5, 5), { r: 0.5, g: 0.5, b: 0.8 });
-    slide.setEulerAngles(0, 0, 30); // Tilt the slide
+    slide.setEulerAngles(0, 0, 30); // Tilt the slide for effect
 
-    // Trees
+    // Create trees
     const trunkColor = { r: 0.6, g: 0.4, b: 0.2 };
     const foliageColor = { r: 0.1, g: 0.8, b: 0.1 };
     for (let i = -20; i < 21; i += 10) {
@@ -73,47 +73,47 @@ export function createMap(app: pc.Application) {
         createEntity("TreeFoliage", "sphere", new pc.Vec3(i, 4.5, 20), new pc.Vec3(3, 3, 3), foliageColor);
     }
 
-    // Adding fences
+    // Create fences
     for (let i = -30; i <= 30; i += 10) {
         createEntity(`Fence${i}`, "box", new pc.Vec3(i, 1.5, -15), new pc.Vec3(0.2, 2, 2), { r: 0.7, g: 0.5, b: 0.3 });
     }
 
-    // Adding tombstones (for the scary effect)
+    // Create tombstones for a scary effect
     createEntity("Tombstone1", "box", new pc.Vec3(-8, 1, -5), new pc.Vec3(1, 2, 0.5), { r: 0.4, g: 0.4, b: 0.4 });
     createEntity("Tombstone2", "box", new pc.Vec3(8, 1, -5), new pc.Vec3(1, 2, 0.5), { r: 0.4, g: 0.4, b: 0.4 });
 
-    // Adding a small pond (water)
+    // Create a small pond entity (water)
     const pond = createEntity("Pond", "cylinder", new pc.Vec3(-10, 0.1, -5), new pc.Vec3(2, 0.1, 3), { r: 0.1, g: 0.2, b: 0.8 });
 
-    // Adding vehicles (cars)
+    // Create vehicle entities (cars)
     createEntity("Car1", "box", new pc.Vec3(5, 0.5, -15), new pc.Vec3(3, 0.5, 1), { r: 0.5, g: 0.1, b: 0.1 });
     createEntity("Car2", "box", new pc.Vec3(-5, 0.5, -15), new pc.Vec3(3, 0.5, 1), { r: 0.1, g: 0.1, b: 0.5 });
 
-    // Adding zombies
+    // Create zombie entities
     for (let i = -15; i <= 15; i += 10) {
-        createEntity(`Zombie${i}`, "box", new pc.Vec3(i, 1.5, -10), new pc.Vec3(1, 1.5, 1), { r: 0.3, g: 0.8, b: 0.3 }); // Zombie green color
+        createEntity(`Zombie${i}`, "box", new pc.Vec3(i, 1.5, -10), new pc.Vec3(1, 1.5, 1), { r: 0.3, g: 0.8, b: 0.3 }); // Green color for zombies
     }
 
-    // Thêm ngôi đền
+    // Function to create a temple at a specified position
     const createTemple = (position: pc.Vec3) => {
         createEntity("TempleBase", "box", position, new pc.Vec3(10, 0.5, 10), { r: 0.9, g: 0.8, b: 0.1 });
         createEntity("TempleRoof", "cone", new pc.Vec3(position.x, position.y + 3, position.z), new pc.Vec3(10, 2, 10), { r: 0.8, g: 0.3, b: 0.1 });
     };
 
-    // Tạo hai ngôi đền cách nhau 100 đơn vị
+    // Create two temples spaced 100 units apart
     createTemple(new pc.Vec3(-50, 0, -20));
     createTemple(new pc.Vec3(50, 0, -20));
 
-    // Thêm ngôi mộ
+    // Function to create a tombstone at a specified position
     const createTombstone = (position: pc.Vec3) => {
         createEntity("Tombstone", "box", position, new pc.Vec3(1, 2, 0.5), { r: 0.4, g: 0.4, b: 0.4 });
     };
 
-    // Tạo 100 ngôi mộ ngẫu nhiên trong khu vực
+    // Create 100 random tombstones in the area
     for (let i = 0; i < 100; i++) {
-        const x = Math.random() * 200 - 100; // Ngẫu nhiên trong khoảng -100 đến 100
-        const z = Math.random() * -50; // Ngẫu nhiên trong khoảng -50 đến 0
-        createTombstone(new pc.Vec3(x, 1, z)); // Đặt Y là 1
+        const x = Math.random() * 200 - 100; // Random position in the range -100 to 100
+        const z = Math.random() * -50; // Random position in the range -50 to 0
+        createTombstone(new pc.Vec3(x, 1, z)); // Set Y position to 1
     }
 
     return entities;
@@ -128,7 +128,7 @@ export function createMap(app: pc.Application) {
  */
 export function updateMap(app: pc.Application, dt: number, entities: pc.Entity[]) {
     entities.forEach(entity => {
-        // Ensure collision component exists and is enabled
+        // Ensure the collision component exists and is enabled
         if (!entity.collision) {
             entity.addComponent('collision', {
                 type: entity.model?.type === 'sphere' ? 'sphere' : 'box',
@@ -139,6 +139,6 @@ export function updateMap(app: pc.Application, dt: number, entities: pc.Entity[]
                 )
             });
         }
-        // Additional update logic here if needed
+        // Additional update logic can be added here if necessary
     });
 }

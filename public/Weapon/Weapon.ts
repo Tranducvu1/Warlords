@@ -47,22 +47,3 @@ export function updateWeaponPosition(weaponHelper, rightHandBone) {
     weaponHelper.setRotation(handRotation);
 }
 
-/**
- * Initializes a muzzle flash effect for the weapon.
- * 
- * @param app - The PlayCanvas application instance.
- * @param assets - The assets required for the muzzle flash effect.
- * @returns The muzzle flash entity added to the scene.
- */
-function initializeMuzzleFlash(app, assets) {
-    const muzzleFlashEntity = new pc.Entity('muzzleFlash');
-    
-    // Add model component to the muzzle flash entity and attach it to the scene.
-    muzzleFlashEntity.addComponent('model', {
-        type: 'asset',
-        asset: assets.muzzleFlash
-    });
-    app.root.addChild(muzzleFlashEntity);
-
-    return muzzleFlashEntity; // Return the muzzle flash entity for further customization if needed.
-}
