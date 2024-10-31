@@ -48,7 +48,7 @@ export function createMap(app: pc.Application) {
     };
 
     // Create the ground entity
-    createEntity("Ground", "box", new pc.Vec3(0, 0.1, 0), new pc.Vec3(100, 0.1, 100), { r: 0.4, g: 0.5, b: 0.4 });
+    createEntity("Ground", "box", new pc.Vec3(0, 0.1, 0), new pc.Vec3(200, 0.1, 200), { r: 0.4, g: 0.5, b: 0.4 });
 
     // Create zombie spawn points
     for (let i = -20; i <= 20; i += 10) {

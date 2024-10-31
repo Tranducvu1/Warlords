@@ -8,7 +8,7 @@ import * as pc from 'playcanvas';
 function initZombieProperties(enemyEntity) {
     enemyEntity.direction ??= 1; // Initial movement direction (1: right, -1: left)
     enemyEntity.zombieSpeed ??= 2; // Default movement speed
-    enemyEntity.chaseRange ??= 30; // Detection range to start chasing the player
+    //enemyEntity.chaseRange ??= 50; // Detection range to start chasing the player
     enemyEntity.attackRange ??= 2; // Range within which zombie attacks
     enemyEntity.patrolState ??= { // Patrol behavior settings
         currentPoint: 0,

@@ -1,9 +1,6 @@
 import * as pc from 'playcanvas';
 import { MOVEMENT_CONFIG, createInitialState, initializeComponents } from './CharacterMovementSetup';
 import { setupEventListeners } from './CharacterEventHandlers';
-
-import { triggerMuzzleFlash } from '../muzzle/triggleMuzzle';
-
 /**
  * Creates a movement handler for the character in the game.
  *
@@ -43,10 +40,6 @@ export function createMovementHandler(
         crosshairEntity,
         
     );
-
-    
-    
-
     /**
      * Handles keyboard input to control character movement and states.
      *
@@ -123,7 +116,6 @@ function handleKeyboardInput(dt) {
     }
 }
 
-
     /**
      * Updates the character's rotation based on the given angle.
      *
@@ -142,7 +134,7 @@ function handleKeyboardInput(dt) {
     function updateCameraPosition() {
         const charPosition = characterEntity.getPosition(); // Get character position
         const cameraOffset = new pc.Vec3().copy(MOVEMENT_CONFIG.CAMERA_OFFSET); // Get camera offset
-        const cameraQuat = new pc.Quat().setFromEulerAngles(0, MOVEMENT_CONFIG.cameraYaw, 0); // Get camera rotation
+        const cameraQuat = new pc.Quat().setFromEulerAngles(MOVEMENT_CONFIG.cameraPitch, MOVEMENT_CONFIG.cameraYaw, 0); // Get camera rotation
         cameraQuat.transformVector(cameraOffset, cameraOffset); // Apply rotation to offset
         const cameraPosition = new pc.Vec3().add2(charPosition, cameraOffset); // Calculate camera position
         cameraEntity.setPosition(cameraPosition); // Set camera position

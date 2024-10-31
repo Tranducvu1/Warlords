@@ -44,7 +44,7 @@ export function createZombieEntity(app: pc.Application, assets: any, x: number, 
     // Configure capsule collision component for better character fit
     zombieEntity.addComponent("collision", {
         type: 'capsule',           // Use capsule shape for better character-like collision
-        radius: 0.5,               // Radius of the capsule
+        radius: 1.5,               // Radius of the capsule
         height: 1.8,               // Height for realistic zombie body coverage
         axis: 1                    // Align capsule on the y-axis
     });

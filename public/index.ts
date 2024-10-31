@@ -10,7 +10,9 @@ import { createplayerstateMachine } from './player/playerstateMachine';
 import { initializeCrosshairEntity } from './player/crosshair';
 import { createMovementHandler } from './player/CharacterMovement';
 import { handleZombieStates } from './zombie/handleZombieStates';
-import { setupRaycasting } from './player/RaycastingSystem';
+
+
+// import { setupRaycasting } from './player/RaycastingSystem';
 
 // Set configuration for Wasm module
 pc.WasmModule.setConfig("Ammo", {
@@ -25,21 +27,19 @@ function getRandomPosition(range) {
 }
 
 // Function to check if a position is at least `minDistance` away from all existing positions
-function isPositionFarEnough(position, existingPositions, minDistance) {
-    return existingPositions.every((pos) => {
-        const dx = position.x - pos.x;
-        const dz = position.z - pos.z;
-        return Math.sqrt(dx * dx + dz * dz) >= minDistance;
-    });
-}
-
+// function isPositionFarEnough(position, existingPositions, minDistance) {
+//     return existingPositions.every((pos) => {
+//         const dx = position.x - pos.x;
+//         const dz = position.z - pos.z;
+//         return Math.sqrt(dx * dx + dz * dz) >= minDistance;
+//     });
+// }
 // Main initialization function
 window.onload = async () => {
     // Load the Ammo Wasm module
     await new Promise((resolve) => {
         pc.WasmModule.getInstance("Ammo", resolve);
     });
-
     // Get the canvas element for rendering
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     if (canvas) {
@@ -70,7 +70,6 @@ window.onload = async () => {
             //             z: getRandomPosition(spawnRange),
             //         };
             //     } while (!isPositionFarEnough(position, zombies.map(z => ({ x: z.getPosition().x, z: z.getPosition().z })), minDistance));
-            
             //     const zombieEntity = createZombieEntity(app, assets, position.x, position.y, position.z);
             //     zombies.push(zombieEntity);
             // } O(n) complexity for checking distance between all zombies and new position is not efficient
@@ -81,6 +80,8 @@ window.onload = async () => {
             const zombieEntity4 =createZombieEntity(app, assets, 30, 0.1, -25);
             const zombieEntity5 = createZombieEntity(app, assets, 30, 0.1, -45);
             // Create other game entities
+            
+              
             const characterEntity = createCharacterEntity(app, assets, cameraEntity);
             const crosshairEntity = initializeCrosshairEntity(app, assets);
             const playerStateMachine = createplayerstateMachine(characterEntity, assets);
@@ -101,7 +102,7 @@ window.onload = async () => {
                 playerStateMachine
             );
 
-            setupRaycasting(app, playerStateMachine, cameraEntity, crosshairEntity, assets);
+          //  setupRaycasting(app, playerStateMachine, cameraEntity, crosshairEntity, assets);
 
             // Main update loop
             app.on("update", (dt) => {

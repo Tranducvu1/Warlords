@@ -21,7 +21,7 @@ export function createGround(app: pc.Application): void {
     // Add a collision component to the ground entity for physics interactions
     ground.addComponent("collision", {
         type: "box",
-        halfExtents: new pc.Vec3(100, 0.05, 100) // Half the scale to define the collision bounds
+        halfExtents: new pc.Vec3(500, 0.05, 500) // Half the scale to define the collision bounds
     });
 
     // Add a rigidbody component to the ground entity to enable physics

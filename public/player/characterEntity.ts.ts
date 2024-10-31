@@ -14,7 +14,7 @@ export class CharacterEntity extends pc.Entity {
     private experience: number;
 
     // Constructor to initialize character's name, health, experience, app, and assets
-    constructor(name: string, initialHealth: number, initialExperience: number, app: pc.Application, assets: any) {
+    constructor(name: string, initialHealth: number, initialExperience: number, app: pc.Application, assets: any,camera:pc.Entity) {
         super(name);
 
         // Initialize health and experience values
@@ -23,13 +23,19 @@ export class CharacterEntity extends pc.Entity {
         this.maxExperience = 100;
         this.experience = 0; 
 
-        // Initialize and attach health and experience bars to the character entity
-        this.healthBar = new healthbarCharacter(app, assets);
-        this.experienceBar = new experimentBar(app, assets);
-        this.addChild(this.healthBar.entity);
-        this.addChild(this.experienceBar.entity);
+       
 
-        
+          // Initialize and attach health and experience bars to the character entity
+          this.healthBar = new healthbarCharacter(app, assets);
+          this.healthBar.entity.setLocalPosition(-2.5, 1.5, -4); 
+          this.healthBar.entity.setEulerAngles(90, 0, 0);
+          this.healthBar.entity.setLocalScale(0.015, 0.02, 0.02);
+          camera.addChild(this.healthBar.entity);
+
+          this.experienceBar = new experimentBar(app, assets);
+          this.experienceBar.entity.setLocalPosition(-2.5, 1.4, -4);
+          this.experienceBar.entity.setLocalScale(0.015, 0.02, 0.02);
+          camera.addChild(this.experienceBar.entity);
     }
 
    
@@ -89,15 +95,16 @@ export class CharacterEntity extends pc.Entity {
 }
 
 // Helper function to create an enemy character with specified properties and add it to the app root
-export function createEnemy(
+export function createCharacterEntity(
     app: pc.Application,
     assets: any,
     name: string,
     health: number,
     experience: number,
-    position: pc.Vec3
+    position: pc.Vec3,
+    camera:pc.Entity
 ): CharacterEntity {
-    const enemy = new CharacterEntity(name, health, experience, app, assets);
+    const enemy = new CharacterEntity(name, health, experience, app, assets,camera); // Create a new enemy character
     enemy.setPosition(position.x, position.y, position.z); // Set enemy position
     app.root.addChild(enemy); // Add enemy to the app root
     return enemy; // Return the created enemy instance

@@ -7,6 +7,7 @@ import * as pc from 'playcanvas';
  * @param {pc.Application} app - The PlayCanvas application instance.
  * @returns {pc.Entity} The created camera entity.
  */
+
 export function createCamera(app: pc.Application): pc.Entity {
     // Create a new entity named 'camera'
     const cameraEntity = new pc.Entity('camera');

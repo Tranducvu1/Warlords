@@ -1,87 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Importing the PlayCanvas library, essential for 3D game development -->
-    <script src="https://code.playcanvas.com/playcanvas-stable.js"></script>
-    <title>Warlords</title>
-    <!-- Link to the external CSS for styling the game -->
-    <link rel="stylesheet" type="text/css" href="./game.css">
-</head>
-<body>
-    <!-- Main canvas element where the game will be rendered -->
-    <canvas id="canvas"></canvas>
-    
-    <!-- Countdown timer display -->
-    <div id="countdown">05:00</div>
-    
-    <!-- Overlay for game over screen with a restart button -->
-    <div id="overlay">
-        <div id="gameOverMessage">Time's up!</div>
-        <button id="restartButton">Play Again</button>
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Importing the PlayCanvas library, essential for 3D game development -->
+        <script src="https://code.playcanvas.com/playcanvas-stable.js"></script>
+        <title>Warlords</title>
+        <!-- Link to the external CSS for styling the game -->
+        <link rel="stylesheet" type="text/css" href="./game.css">
+    </head>
+    <body>
+        <!-- Main canvas element where the game will be rendered -->
+        <canvas id="canvas"></canvas>
+        <div id ='bullet'></div>
+        <!-- Countdown timer display -->
+        <div id="left-number">30</div>
+        <div id="countdown">07:00</div>
+        <!-- Bullet display -->
+        <img id="bullet" src="../assets/model/image ui/bulltet.png" alt="Avatar">
 
-    <!-- Importing the main game logic script (TypeScript) -->
-    <script src="index.ts" type="module"></script>
-    <script>
-        // Preloading sound for countdown to enhance user experience
-        const countdownSound = new Audio('../music/start.mp3');
+        <img id="pause" src="../assets/model/image ui/pause.png" alt="Avatar">
+        <div id="pauseOverlay">Game Paused. Click to resume.</div>
+
+        <div id="winOverlay">
+            <h1>You win!</h1>
+            <button onclick="location.reload()"></button>
+        </div>
+
+        <!-- Overlay for game over screen with a restart button -->
+        <div id="overlay">
+            <div id="gameOverMessage">Time's up!</div>
+            <button onclick="location.reload()">Play Again</button>
+        </div>
+
+        <!-- Importing the main game logic script (TypeScript) -->
+        <script src="index.ts" type="module"></script>
+        <script src="./cowndown.ts">
         
-        countdownSound.loop = false; // Ensure sound plays only once
-        countdownSound.volume = 1.0;  // Set volume to maximum (consider reducing this for better user experience)
-
-        const countdownElement = document.getElementById('countdown');
-        const overlay = document.getElementById('overlay');
-        let totalTime = 5 * 60; // Total countdown time in seconds (5 minutes)
-        let countdownStarted = false; // Flag to track if countdown has started
-
-        // Function to start the countdown
-        function startCountdown() {
-            if (!countdownStarted) {
-                countdownStarted = true;
-                countdownSound.play(); // Start playing countdown sound
-            }
-
-            // Set up an interval to update the countdown every second
-            const interval = setInterval(() => {
-                const minutes = Math.floor(totalTime / 60); // Calculate minutes left
-                const seconds = totalTime % 60; // Calculate seconds left
-
-                // Format countdown display with leading zeros
-                countdownElement.textContent = 
-                    String(minutes).padStart(2, '0') + ':' + 
-                    String(seconds).padStart(2, '0');
-
-                // Check if time is up
-                if (totalTime <= 0) {
-                    clearInterval(interval); // Stop the countdown
-                    countdownElement.textContent = "Time's up!"; // Display game over message
-                    showGameOverScreen(); // Show overlay
-                    countdownSound.pause(); // Stop sound playback
-                }
-
-                totalTime--; // Decrement the total time
-            }, 1000);
-        }
-
-        // Function to display the game over screen
-        function showGameOverScreen() {
-            overlay.style.display = 'flex'; // Make overlay visible
-        }
-
-        // Restart the game when the button is clicked
-        document.getElementById('restartButton').addEventListener('click', () => {
-            location.reload(); // Reload the current page to restart the game
-        });
-
-        // Add error handling for audio loading to catch potential issues
-        countdownSound.addEventListener('error', function(e) {
-            console.error('Error loading countdown sound:', e);
-        });
-
-        // Automatically start the countdown when the page loads
-        startCountdown();
-    </script>
-</body>
-</html>
+        </script>
+    </body>
+    </html>

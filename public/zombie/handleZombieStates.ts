@@ -18,7 +18,7 @@ export function handleZombieStates(assets, characterEntity, enemyEntity) {
         enemyEntity.direction = 1;
         enemyEntity.zombieSpeed = 2;
         enemyEntity.speedattack = 8;
-        enemyEntity.chaseRange = 15;
+        enemyEntity.chaseRange = 40;
         enemyEntity.attackRange = 2;
         enemyEntity.damage = 10;
         enemyEntity.attackCooldown = 3; // seconds between attacks

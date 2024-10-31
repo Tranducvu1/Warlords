@@ -7,9 +7,9 @@ export class healthbarCharacter {
     private redMaterial: pc.StandardMaterial; // Material used for the health bar
     
     // Define consistent scale constants for the health bar
-    private readonly BASE_WIDTH = 0.025;
-    private readonly BASE_HEIGHT = 0.05;
-    private readonly BASE_DEPTH = 0.025;
+    private readonly BASE_WIDTH = 0.05 /2;
+    private readonly BASE_HEIGHT = 0.05/2 ;
+    private readonly BASE_DEPTH = 0.05 /2;
 
     // Constructor to initialize the health bar entity and its properties
     constructor(app: pc.Application, assets: any) {
@@ -53,25 +53,26 @@ export class healthbarCharacter {
         if (assets.healthbar.resource) {
             setupMaterial(); // If the resource is already loaded, set up the material immediately
         }
-    }
+    }   
 
     // Method to set the initial scale and position of the health bar
     private setInitialScale() {
         this.entity.setLocalScale(
-            this.BASE_WIDTH - 0.015, // Scale width
-            this.BASE_HEIGHT - 0.02, // Scale height
-            this.BASE_DEPTH - 0.01 // Scale depth
+            this.BASE_WIDTH , // Scale width
+            this.BASE_HEIGHT , // Scale height
+            this.BASE_DEPTH  // Scale depth
         );
-        this.entity.setLocalPosition(2, 2.8, 0); // Set the initial position of the health bar
+        this.entity.setLocalPosition(-100, 0, 10); 
+        // Set the initial position of the health bar
     }
 
     // Method to update the health bar scale based on current and maximum health
     updateHealth(currentHealth: number, maxHealth: number) {
         const healthPercentage = currentHealth / maxHealth; // Calculate health percentage
         this.entity.setLocalScale(
-            (this.BASE_WIDTH - 0.015) * healthPercentage, // Scale width based on health percentage
-            this.BASE_HEIGHT - 0.02, // Maintain constant height
-            this.BASE_DEPTH - 0.01 // Maintain constant depth
+            (this.BASE_WIDTH) * healthPercentage, // Scale width based on health percentage
+            this.BASE_HEIGHT , // Maintain constant height
+            this.BASE_DEPTH // Maintain constant depth
         );
     }
 
